@@ -163,7 +163,7 @@ Get example sentence.
 
 **Params**:
 
-* `ids`: Array of `sys_example_ids` from `/review`
+* `ids`: `sys_example_ids` + `learning_example_ids` ( own sentence ) from `/review`
 
 **or**
 
@@ -234,11 +234,28 @@ Description:
 
 * Sentence: `first` + `mid` + `last`
 
+### **POST** `/example`
+
+**Params**: json
+
+Example:
+
+    {"original":"Hello world!","translation":"世界，您好！","vocabulary":6639}
+
+Description:
+
+* `original`: the sentence
+* `vocabulary`: word id
+
 ### **GET** `/note`
 
 Get shared notes
 
 **Params**:
+
+* `ids`: `learning_note_ids` from `/review` ( Return own note )
+
+**or**
 
 * `vocabulary_id`: Word id ( `content_id` from `/review` )
 
@@ -284,3 +301,18 @@ Example:
         }
       ]
     }
+
+### **POST** `/note`
+
+Create note.
+
+**Params**: json
+
+Example:
+
+    {"note":"test2","vocabulary":6078}
+
+Description:
+
+* `note`: the note
+* `vocabulary`: word id
