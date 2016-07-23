@@ -1,14 +1,16 @@
-const requireNode = window.require;
+const nodeRequire = window.require;
 require("./all.sass");
-const electron = requireNode('electron');
-const ipc = electron.ipcRenderer;
+const electron = nodeRequire('electron');
 const react = require('react');
 
-const ctx = electron.remote.getCurrentWindow().shanbay_context;
+const ipc = electron.ipcRenderer;
 const mount = document.getElementsByClassName('react')[0];
 
-switch (ctx) {
-    case "login":
-        require("./login.jsx")(mount);
-        break;
-}
+ipc.once('view', (event, ctx) => {
+    console.log(event, ctx);
+    switch (ctx) {
+        case "login":
+            require("./login.jsx")(mount, ipc);
+            break;
+    }
+});

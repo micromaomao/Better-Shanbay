@@ -1,9 +1,14 @@
+$login-height: 350px;
+$login-height-top: 100px;
+$login-height-topmid-border: 3px;
+$login-height-bottom: 40px;
+$login-height-mid: $login-height - $login-height-top - $login-height-bottom;
+
 .top
     box-sizing: border-box;
-    height: 100px;
+    height: $login-height-top - $login-height-topmid-border;
     background-color: $color-primary;
     color: #ffffff;
-    border-bottom: solid 2px $color-primary-dark;
     margin: 0;
     padding: 1.5rem 1rem 1rem 1rem;
     text-align: right;
@@ -16,7 +21,7 @@
 
     .for
         font-size: 0.8rem;
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(white, 0.2);
         text-align: right;
         display: inline-block;
         border-radius: 0.9rem;
@@ -28,20 +33,55 @@
         text-align: right;
         padding-right: 0.5rem;
 
+.top-mid-border
+    background-color: #dddddd;
+    height: $login-height-topmid-border;
+    .stub
+        background-color: $color-primary-dark;
+        height: $login-height-topmid-border;
+    .stub.animate
+        @extend .loading-strip-animate
 .mid
     box-sizing: border-box;
-    height: 210px;
+    height: $login-height-mid;
+    overflow: auto;
 
-.mid.attemping
+.mid.attempting
     font-size: 0.9rem;
     color: #666666;
     text-align: center;
     line-height: 2;
+.mid.waitLogin
+    padding: 0.5rem;
+    .askLoginWay
+        font-size: 0.9rem;
+        color: $color-primary-dark;
+        .cookie
+            font-weight: bold;
+        margin-bottom: 0.5rem;
+    button
+        width: 100%;
+        display: block;
+        font-size: 0.9rem;
+    button.yes
+        @extend .emp
+    div
+        text-align: center;
+        a
+            color: $color-primary;
+            font-size: 0.8rem;
+            text-decoration: underline;
+            margin: 0 0.5rem 0 0.5rem;
+.mid.waitLogin.selectMethod, .mid.attempting
+    padding-top: 2.5rem;
 
 .bottom button
-    height: 40px;
+    height: $login-height-bottom;
     margin: 0;
 
 .bottom.onebtn button
     width: 100%;
+    font-size: 1rem;
+.bottom.twobtn button
+    width: 50%;
     font-size: 1rem;

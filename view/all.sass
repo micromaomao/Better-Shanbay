@@ -23,4 +23,25 @@ button
 button:active
     background-color: #dfdfdf;
 
+button.emp
+    background-color: $color-primary;
+    color: #ffffff;
+button.emp:active
+    background-color: $color-primary-dark;
+
+@keyframes border-stub
+    0%
+        margin-left: 100%;
+        margin-right: 0;
+    50%
+        margin-left: 0;
+        margin-right: 0;
+    100%
+        margin-left: 0;
+        margin-right: 100%;
+.loading-strip-animate
+        animation-name: border-stub;
+        animation-duration: 1.5s;
+        animation-iteration-count: infinite;
+
 @import login
