@@ -1,0 +1,37 @@
+{
+  "name": "better-shanbay",
+  "version": "0.0.1",
+  "description": "Shanbay desktop client",
+  "main": "main.js",
+  "scripts": {
+    "webpack": "webpack",
+    "start": "npm run webpack && electron .",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/micromaomao/Better-Shanbay.git"
+  },
+  "keywords": [
+    "shanbay"
+  ],
+  "author": "Mao Wtm",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/micromaomao/Better-Shanbay/issues"
+  },
+  "homepage": "https://github.com/micromaomao/Better-Shanbay#readme",
+  "dependencies": {
+    "babel-core": "^6.11.4",
+    "babel-loader": "^6.2.4",
+    "babel-preset-react": "^6.11.1",
+    "css-loader": "^0.23.1",
+    "electron-prebuilt": "^1.2.8",
+    "node-sass": "^3.8.0",
+    "react": "^15.2.1",
+    "react-dom": "^15.2.1",
+    "sass-loader": "^4.0.0",
+    "style-loader": "^0.13.1",
+    "webpack": "^1.13.1"
+  }
+}
