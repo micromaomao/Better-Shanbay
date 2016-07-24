@@ -4,75 +4,169 @@ const React = require('react');
 const electron = nodeRequire('electron');
 const win = electron.remote.getCurrentWindow();
 
-class MidLogin extends React.Component {
+let canceled = [];
+
+class CookiePaster extends React.Component {
     constructor() {
         super();
-        this.state = {
-            loginWay: null
-        };
+        this.state = {};
+        this.handlePaste = this.handlePaste.bind(this);
+    }
+    handlePaste () {
+        this.value = electron.clipboard.readText();
+    }
+    get value() {
+        return this.input.value;
+    }
+    set value(v) {
+        if (this.input.value == v) {
+            return;
+        }
+        this.input.value = v;
+        this.props.onChange(v);
     }
     render() {
-        if (this.state.loginWay == null) {
-            return (
-                <div className="mid waitLogin selectMethod">
-                    <div className="askLoginWay">
-                        {"Do you know how to get your "}
-                        <span className="cookie">Cookie</span>
-                        {"s on Shanbay?"}
-                    </div>
-                    <button className="yes">Yes, use my Cookie!</button>
-                    <button className="no">No, use my login and password.</button>
-                    <div>
-                        <a>What is Cookie?</a>
-                        <a>Try a demo</a>
-                        <a>Disclaimer</a>
-                    </div>
+        return (
+            <div className="cookiePaster">
+                <div className="cinput">
+                    <input type="text" ref={(f) => this.input = f} onChange={(evt) => {
+                        this.props.onChange(this.value);
+                    }} />
                 </div>
-            );
-        }
+                <div className="cbutton">
+                    <button className="emp" onClick={this.handlePaste}>Paste</button>
+                </div>
+            </div>
+        );
     }
 }
 
 class LoginPenal extends React.Component {
     constructor() {
         super();
-        this.state = {};
+        this.state = {
+            showing: null,
+            loginMethod: null,
+            cookie: "",
+            attemptingFrom: null,
+            errmsg: null,
+            currentTrial: null
+        };
         this.handleCancel = this.handleCancel.bind(this);
+        this.handleUseCookie = this.handleUseCookie.bind(this);
+        this.handleLogin = this.handleLogin.bind(this);
+        this.handleBack = this.handleBack.bind(this);
+        this.handleCookieInput = this.handleCookieInput.bind(this);
+        this.handleClose = this.handleClose.bind(this);
+    }
+    setState(newState) {
+        if (newState.showing && newState.showing != "attempting") {
+            newState = Object.assign({}, newState, {attemptingFrom: null});
+        }
+        super.setState(newState);
     }
     handleCancel() {
+        let trial = this.state.currentTrial;
+        canceled[trial] = true;
+        this.setState({showing: 'requireLogin'});
+    }
+    handleClose() {
         window.close();
     }
+    handleUseCookie() {
+        this.setState({loginMethod: 'cookie'});
+    }
+    handleBack() {
+        this.setState({loginMethod: null, errmsg: null});
+    }
+    handleLogin() {
+        let ipc = this.props.ipc;
+        if (this.state.loginMethod == "cookie") {
+            let cookie = this.state.cookie;
+            let trial = canceled.push(false) - 1;
+            this.setState({showing: "attempting", attemptingFrom: "cookie", currentTrial: trial});
+            ipc.send('login', {loginMethod: 'cookie', cookie: cookie, trialId: trial});
+        }
+    }
+    handleCookieInput(cookie) {
+        this.setState({cookie: cookie});
+    }
     render() {
-        let countClass = "";
         let midContent = null;
         let stubAnimation = false;
         let showLoginButton = false;
-        switch (this.props.show) {
+        let midLogin = null;
+        switch (this.state.showing) {
             case 'attempting':
-                countClass = "onebtn";
+                let loginMethod = "";
                 stubAnimation = true;
                 midContent = (
                     <div className="mid attempting">
-                        Attemping to connect with stored login...
+                        Attemping to connect with {this.state.attemptingFrom}...
                     </div>
                 );
                 break;
             case 'requireLogin':
-                countClass = "onebtn";
-                midContent = (
-                    <MidLogin />
-                )
+                midContent = null;
         }
+        if (midContent == null) {
+            let errmsg = null;
+            if (this.state.errmsg) {
+                errmsg = (
+                    <div className="errmsg">{this.state.errmsg}</div>
+                );
+            }
+            switch (this.state.loginMethod) {
+                case null:
+                    midLogin = (
+                        <div className="mid waitLogin selectMethod">
+                            <div className="askLoginWay">
+                                {"Do you know how to get your "}
+                                <span className="cookie">Cookie</span>
+                                {"s on Shanbay?"}
+                            </div>
+                            <button className="yes" onClick={this.handleUseCookie}>Yes, use my Cookie!</button>
+                            <button className="no">No, use my login and password.</button>
+                            <div className="other">
+                                <a>What is Cookie?</a>
+                                <a>Try a demo</a>
+                                <a>Disclaimer</a>
+                            </div>
+                        </div>
+                    );
+                    break;
+                case 'cookie':
+                    showLoginButton = true;
+                    midLogin = (
+                        <div className="mid waitLogin cookieMethod">
+                            <div className="askCookie">Please paste your cookie below:</div>
+                            <CookiePaster onChange={this.handleCookieInput} ref={(f) => {
+                                this.cookieInput = f;
+                                if (f == null) return;
+                                f.value = this.state.cookie;
+                            }} />
+                            {errmsg}
+                        </div>
+                    )
+                    break;
+            }
+        }
+        let countClass = showLoginButton ? "twobtn" : "onebtn";
         return (
             <div className="loginPanel">
                 <div className="top-mid-border">
                     <div className={"stub" + (stubAnimation ? ' animate' : '')} />
                 </div>
                 {midContent}
+                {midLogin}
                 <div className={"bottom " + countClass}>
-                    <button onClick={this.handleCancel}>Cancel</button>
+                    <button onClick={showLoginButton ? this.handleBack : (
+                        this.state.showing == "attempting" ? this.handleCancel : this.handleClose)}>
+                        {showLoginButton ? "Back" : (
+                            this.state.showing == "attempting" ? "Cancel" : "Close")}
+                    </button>
                     {showLoginButton ?
-                            (<button>Login</button>)
+                            (<button onClick={this.handleLogin}>Login</button>)
                             : null}
                 </div>
             </div>
@@ -83,10 +177,7 @@ class LoginPenal extends React.Component {
 class LoginUI extends React.Component {
     constructor() {
         super();
-        this.state = {
-            showing: 'attempting',
-            errmsg: null
-        };
+        this.state = {};
     }
     render() {
         return (
@@ -96,7 +187,7 @@ class LoginUI extends React.Component {
                     <div className="for">For Shanbay Words</div>
                     <div className="author">By Mao Wtm, NOT official</div>
                 </div>
-                <LoginPenal show={this.state.showing} errmsg={null} />
+                <LoginPenal ref={(f) => this.panel = f} ipc={this.props.ipc} />
             </div>
         );
     }
@@ -104,10 +195,14 @@ class LoginUI extends React.Component {
 
 module.exports = (mount, ipc) => {
     let uiComp = ReactDOM.render(
-        <LoginUI />,
+        <LoginUI ipc={ipc} />,
         mount
     );
+    uiComp.panel.setState({showing: 'attempting', attemptingFrom: "stored login"});
     ipc.on('requireLogin', (event, arg) => {
-        uiComp.setState({showing: 'requireLogin', errmsg: arg.errmsg});
+        if (arg.trialId !== null && canceled[arg.trialId]) {
+            return;
+        }
+        uiComp.panel.setState({showing: 'requireLogin', loginMethod: arg.method, errmsg: arg.errmsg});
     });
 };

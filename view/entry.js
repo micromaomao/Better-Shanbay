@@ -7,7 +7,6 @@ const ipc = electron.ipcRenderer;
 const mount = document.getElementsByClassName('react')[0];
 
 ipc.once('view', (event, ctx) => {
-    console.log(event, ctx);
     switch (ctx) {
         case "login":
             require("./login.jsx")(mount, ipc);

@@ -1,6 +1,7 @@
 $color-primary: #209e85;
 $color-primary-dark: #127763;
 $color-primary-text: #222222;
+$color-error: #ea4335;
 body
     font-size: 16px;
     background-color: #ffffff;
@@ -11,7 +12,7 @@ body
     -webkit-user-select: none;
     cursor: default;
 
-button
+.btn-like
     box-sizing: border-box;
     border: none;
     font-size: 1.1rem;
@@ -19,6 +20,11 @@ button
     background-color: #eeeeee;
     padding: 0.3rem;
     color: $color-primary;
+button
+    @extend .btn-like
+input
+    @extend .btn-like
+    color: $color-primary-text;
 
 button:active
     background-color: #dfdfdf;
