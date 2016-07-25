@@ -50,7 +50,8 @@ class LoginPenal extends React.Component {
             cookie: "",
             attemptingFrom: null,
             errmsg: null,
-            currentTrial: null
+            currentTrial: null,
+            saveCheck: true
         };
         this.handleCancel = this.handleCancel.bind(this);
         this.handleUseCookie = this.handleUseCookie.bind(this);
@@ -58,6 +59,7 @@ class LoginPenal extends React.Component {
         this.handleBack = this.handleBack.bind(this);
         this.handleCookieInput = this.handleCookieInput.bind(this);
         this.handleClose = this.handleClose.bind(this);
+        this.handleSaveCheckChange = this.handleSaveCheckChange.bind(this);
     }
     setState(newState) {
         if (newState.showing && newState.showing != "attempting") {
@@ -85,11 +87,18 @@ class LoginPenal extends React.Component {
             let cookie = this.state.cookie;
             let trial = canceled.push(false) - 1;
             this.setState({showing: "attempting", attemptingFrom: "cookie", currentTrial: trial});
-            ipc.send('login', {loginMethod: 'cookie', cookie: cookie, trialId: trial});
+            ipc.send('login', {loginMethod: 'cookie', cookie: cookie, trialId: trial, save: this.state.saveCheck});
         }
     }
     handleCookieInput(cookie) {
         this.setState({cookie: cookie});
+    }
+    handleSaveCheckChange() {
+        let checked = this.saveCheckInput.checked;
+        this.setState({saveCheck: checked});
+        if (!checked) {
+            this.props.ipc.send('rmStoredLogin');
+        }
     }
     render() {
         let midContent = null;
@@ -116,6 +125,18 @@ class LoginPenal extends React.Component {
                     <div className="errmsg">{this.state.errmsg}</div>
                 );
             }
+            let saveCookieCheckbox = (
+                <div className="cSaveCookieCheckbox">
+                    <input type="checkbox" id="saveCookieCheck"
+                        onChange={this.handleSaveCheckChange}
+                        checked={this.state.saveCheck} ref={(f) => this.saveCheckInput = f} />
+                    <label htmlFor="saveCookieCheck">
+                        {"Save " + (
+                            this.state.loginMethod == "cookie" ? "this cookie"
+                                : "the session")} for further login.
+                    </label>
+                </div>
+            )
             switch (this.state.loginMethod) {
                 case null:
                     midLogin = (
@@ -132,6 +153,7 @@ class LoginPenal extends React.Component {
                                 <a>Try a demo</a>
                                 <a>Disclaimer</a>
                             </div>
+                            {errmsg}
                         </div>
                     );
                     break;
@@ -145,6 +167,7 @@ class LoginPenal extends React.Component {
                                 if (f == null) return;
                                 f.value = this.state.cookie;
                             }} />
+                            {saveCookieCheckbox}
                             {errmsg}
                         </div>
                     )

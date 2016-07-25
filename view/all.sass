@@ -22,9 +22,33 @@ body
     color: $color-primary;
 button
     @extend .btn-like
-input
+input[type="text"]
     @extend .btn-like
     color: $color-primary-text;
+[type="checkbox"]
+    display: none;
+
+[type="checkbox"] + label:before
+    content: ' ';
+    display: inline-block;
+    border: solid 1px #aaaaaa;
+    width: 0.8rem;
+    height: 0.8rem;
+    vertical-align: middle;
+    background-color: #eeeeee;
+    margin-top: -2px;
+    margin-right: 0.5rem;
+    box-shadow: inset 0 0 0 2px #eeeeee;
+[type="checkbox"]:checked + label:before
+    background-color: $color-primary;
+[type="checkbox"] + label
+    font-size: 0.9rem;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+    line-height: 1;
+    padding-top: 4px;
+    display: inline-block;
 
 button:active
     background-color: #dfdfdf;
