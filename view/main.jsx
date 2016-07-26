@@ -105,7 +105,7 @@ class MainUI extends React.Component {
                 this.setState({welcome: false, currentWord: null,
                                 reviewError: arg.err.toString(),
                                 current: null});
-            } if (arg !== null) {
+            } else if (arg !== null) {
                 this.setState({welcome: false, currentWord: arg,
                                 reviewError: null});
                 this.startWord();
@@ -125,8 +125,13 @@ class MainUI extends React.Component {
     nextWord(result) {
         let prevResults = null;
         if (result && this.state.currentWord) {
+            let word = this.state.currentWord;
             prevResults = {};
-            prevResults[this.state.currentWord.submitId] = result;
+            let sub = result;
+            if (sub == "pass" && word.reviewStatus == "fresh") {
+                sub = "master";
+            }
+            prevResults[this.state.currentWord.submitId] = sub;
         }
         ipc.send('review', {prevResults: prevResults});
         this.setState({welcome: false, currentWord: null, reviewError: null,
@@ -143,7 +148,7 @@ class MainUI extends React.Component {
             console.error(new Error("?! (Unexpected 'startWord')"));
             return;
         }
-        let audioNames = Object.keys(word.audios);
+        let audioNames = Object.keys(word.audios || {});
         function wordAudio(i) {
             if (i >= audioNames.length) {
                 return;

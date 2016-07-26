@@ -51,7 +51,7 @@ class ReviewWord {
             "fresh",
             "passed",
             "reviewed",
-            "yellow"
+            "failed"
         ][this._json.review_status];
     }
     get reviewId() {

@@ -236,6 +236,7 @@ app.on('ready', function () {
                         pron: review.pron,
                         submitId: review.reviewId,
                         cndef: review.cnDef,
+                        reviewStatus: review.reviewStatus,
                         audios: {}
                     };
                     let quest = [];
