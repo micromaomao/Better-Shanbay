@@ -170,10 +170,16 @@ $status-bar-height: 1.4rem;
 .exampleSentences
     @extend .testSlide
     background-color: transparent;
-    .sentence
-        background-color: lighten($color-primary, 60%);
+    .showmore, .sentence
         border-radius: 4px;
         margin: 4px;
+        display: block;
+    .showmore
+        width: 100%;
+        font-size: 1rem;
+        margin: 8px;
+    .sentence
+        background-color: lighten($color-primary, 60%);
         .en
             font-size: 1.1rem;
             margin: 2px;
@@ -184,5 +190,8 @@ $status-bar-height: 1.4rem;
             margin: 2px;
             color: #aaaaaa;
             font-size: 0.9rem;
+    .sentence.hintMode
+        font-size: 1.2rem;
+        padding: 1rem;
     .sentence.prefer
         background-color: lighten($color-primary, 50%);

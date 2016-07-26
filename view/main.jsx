@@ -58,7 +58,8 @@ class MainUI extends React.Component {
             welcome: true,
             reviewError: null,
             submitQueue: null,
-            current: null
+            current: null,
+            end: false
         };
         ipc.on('user', ((event, arg) => {
             this.setState({user: {
@@ -92,17 +93,24 @@ class MainUI extends React.Component {
                 review: arg["num_reviewed"],
                 pass: arg["num_passed"]
             }});
+            if (arg["num_left"] === 0) {
+                this.setState({
+                    end: true
+                });
+            }
         }).bind(this));
         ipc.on('review', ((event, arg) => {
-            if (arg.err) {
+            if (arg !== null && arg.err) {
                 ipc.send('review', {});
                 this.setState({welcome: false, currentWord: null,
                                 reviewError: arg.err.toString(),
                                 current: null});
-            } else {
+            } if (arg !== null) {
                 this.setState({welcome: false, currentWord: arg,
                                 reviewError: null});
                 this.startWord();
+            } else {
+                this.setState({end: true});
             }
         }).bind(this));
         ipc.on('submitQueue', ((event, arg) => {
@@ -156,7 +164,8 @@ class MainUI extends React.Component {
             state: "spelling",
             spelling: spelling,
             spellIndex: 0,
-            audio: audioNames[0]
+            audio: audioNames[0],
+            revealSpell: false
         }});
     }
     buildSpell(wordWithHyp) {
@@ -185,40 +194,98 @@ class MainUI extends React.Component {
             let word = this.state.currentWord;
             if (current.state == "spelling") {
                 let letter = event.key || String.fromCharCode(evt.keyCode);
+                if (current.revealSpell) {
+                    this.setState({current: Object.assign({}, current, {
+                        revealSpell: false
+                    })});
+                }
                 if (!letter.match(/^[a-z]$/g)) {
                     if (event.key == "Backspace" || event.keyCode == 8) {
                         event.preventDefault();
                         this.handleSpellCheck(null);
+                        return;
+                    }
+                    if (event.key == "9" || event.keyCode == 57) {
+                        event.preventDefault();
+                        this.setState({current: Object.assign({}, current, {
+                            revealSpell: true
+                        })});
+                        this.handleSpellCheck(null);
+                        return;
                     }
                 } else {
                     letter = letter.toLowerCase();
                     event.preventDefault();
                     this.handleSpellCheck(letter);
+                    return;
                 }
             }
-            if (current.state == "ask" && current.askSyn) {
-                if (event.key == "Enter" || event.keyCode == 13) {
-                    event.preventDefault();
-                    this.handleSynCheck(true);
+            if (current.state == "ask") {
+                if (current.askSyn) {
+                    if (event.key == "Enter" || event.keyCode == 13) {
+                        event.preventDefault();
+                        this.handleSynCheck(true);
+                        return;
+                    } else {
+                        this.handleSynCheck(false);
+                    }
                 } else {
-                    this.handleSynCheck(false);
+                    if (event.key == "Enter" || event.keyCode == 13) {
+                        event.preventDefault();
+                        current = Object.assign(current, {
+                            inputedSyn: null,
+                            markOK: true
+                        });
+                        this.setState({current: current});
+                        this.inShow();
+                        return;
+                    }
+                    if (event.key == " " || event.keyCode == 32) {
+                        event.preventDefault();
+                        current = Object.assign(current, {
+                            inputedSyn: null,
+                            markOK: false
+                        });
+                        this.setState({current: current});
+                        this.inTest();
+                        return;
+                    }
                 }
             }
             if (current.state == "test") {
                 if (event.key == "1" || event.keyCode == 49) {
                     event.preventDefault();
                     this.inShow();
+                    return;
                 }
                 if (event.key == " " || event.keyCode == 32) {
                     event.preventDefault();
                     this.nextTestSlide();
+                    return;
+                }
+            }
+            if (current.state == "show") {
+                if (event.key.toLowerCase() == " " || event.keyCode == 32) {
+                    event.preventDefault();
+                    this.finishWord();
+                    return;
                 }
             }
             if (event.key == "0" || event.keyCode == 48) {
                 event.preventDefault();
                 playAudio(word.audios[current.audio]);
+                return;
             }
         }
+    }
+    finishWord() {
+        let current = this.state.current;
+        let currentWord = this.state.currentWord;
+        if (!currentWord || !current) {
+            return;
+        }
+        let ok = current.markOK || false;
+        this.nextWord(ok ? "pass" : "forget");
     }
     handleSpellCheck(letter) {
         if (this.state.currentWord && this.state.current) {
@@ -376,7 +443,8 @@ class MainUI extends React.Component {
             let oldInputed = current.inputedSyn;
             if (inputedSyn === "") {
                 current = Object.assign(current, {
-                    inputedSyn: null
+                    inputedSyn: null,
+                    markOK: false
                 });
                 this.setState({current: current});
                 this.inTest();
@@ -441,13 +509,23 @@ class MainUI extends React.Component {
                     state: "test",
                     slide: "syn"
                 });
-                if (syns.length == 0) {
-                    this.setState({current: current});
-                    return nextTestSlide();
-                }
                 this.setState({current: current});
+                if (syns.length == 0) {
+                    return this.nextTestSlide();
+                }
                 break;
             case "syn":
+                let examples = currentWord.examples;
+                current = Object.assign(current, {
+                    state: "test",
+                    slide: "sentence"
+                });
+                this.setState({current: current});
+                if (examples.length == 0) {
+                    return this.nextTestSlide();
+                }
+                break;
+            case "sentence":
                 this.inShow();
                 break;
         }
@@ -491,7 +569,7 @@ class MainUI extends React.Component {
         }
         let word = null;
         let cw = this.state.currentWord;
-        if (this.state.welcome) {
+        if (this.state.welcome || this.state.end) {
             let stats = this.state.stats;
             if (stats != null) {
                 word = (
@@ -500,7 +578,9 @@ class MainUI extends React.Component {
                             {stats.pass + " / " + stats.total + " words passed today."}
                         </div>
                         <div className="press">
-                            {"Only keyboard needed. Press any key to start..."}
+                            {this.state.end
+                                ? "You finished all today's words. Now check-in using web."
+                                : "Only keyboard needed. Press any key to start..."}
                         </div>
                     </div>
                 );
@@ -534,6 +614,7 @@ class MainUI extends React.Component {
             let synSlide = null;
             let defs = [];
             let exampleSentences = null;
+            let bottomDesc = null;
             if (!current) {
                 word = (
                     <div className="word">
@@ -542,7 +623,9 @@ class MainUI extends React.Component {
             } else {
                 switch (current.state) {
                     case "spelling":
-                        speller = (<WordSpeller spelling={current.spelling} />)
+                        speller = (<WordSpeller
+                                    spelling={current.spelling}
+                                    reveal={current.revealSpell} />)
                         break;
                     case "ask":
                         if (current.askSyn) {
@@ -572,6 +655,15 @@ class MainUI extends React.Component {
                                     {synError}
                                 </div>
                             );
+                        } else {
+                            ask = (
+                                <div className="ask">
+                                    {"Know the meaning of this word?"}
+                                    <div className="desc">
+                                        {"Press Enter means know, space means don't."}
+                                    </div>
+                                </div>
+                            );
                         }
                         break;
                     case "test":
@@ -589,6 +681,12 @@ class MainUI extends React.Component {
                                         bold={null} />
                                 );
                                 break;
+                            case "sentence":
+                                exampleSentences = (
+                                    <ExampleSentences
+                                        examples={currentWord.examples}
+                                        hintMode={true} />
+                                );
                         }
                         break;
                     case "show":
@@ -618,6 +716,11 @@ class MainUI extends React.Component {
                             addDef(cndef, "cn");
                         }
                         exampleSentences = (<ExampleSentences examples={currentWord.examples} />);
+                        bottomDesc = (
+                            <div className="desc">
+                                {'Press space to show next word.'}
+                            </div>
+                        )
                         break;
                 }
                 let pr = this.getPron();
@@ -634,6 +737,7 @@ class MainUI extends React.Component {
                         {synSlide}
                         {defs}
                         {exampleSentences}
+                        {bottomDesc}
                     </div>
                 )
             }
@@ -687,7 +791,7 @@ class WordSpeller extends React.Component {
         let index = 0;
         table.forEach(ch => {
             let className = "letter";
-            if (ch.show) {
+            if (ch.show || this.props.reveal) {
                 className += " show";
             } else if (ch.spellable) {
                 className += " hide";
@@ -736,17 +840,43 @@ class SynTestSlide extends React.Component {
 class ExampleSentences extends React.Component {
     constructor() {
         super();
-        this.state = {};
+        this.state = {
+            maxIndex: 4
+        };
+        this.step = 5;
+        this.handleMore = this.handleMore.bind(this);
+    }
+    handleMore() {
+        this.setState({
+            maxIndex: this.state.maxIndex + this.step
+        });
     }
     render() {
+        if (this.props.examples.length == 0) {
+            return null;
+        }
         let index = 0;
-        let sentences = this.props.examples.map(ex => {
-            index ++;
-            return (<Sentence key={ex.id} sentence={ex} />);
-        });
+        let somethingLeft = false;
+        let sentences;
+        if (!this.props.hintMode) {
+            sentences = this.props.examples.map(ex => {
+                index ++;
+                if (index - 1 > this.state.maxIndex) {
+                    somethingLeft = true;
+                    return;
+                }
+                return (<Sentence key={ex.id} sentence={ex} />);
+            });
+        } else {
+            let ex = this.props.examples[0];
+            sentences = (<Sentence key={ex.id} sentence={ex} hintMode={true} />);
+        }
         return (
             <div className="exampleSentences">
                 {sentences}
+                {somethingLeft ? (
+                    <button className="showmore" onClick={this.handleMore}>Show {this.step} more...</button>
+                ) : null}
             </div>
         );
     }
@@ -754,24 +884,35 @@ class ExampleSentences extends React.Component {
 class Sentence extends React.Component {
     constructor() {
         super();
-        this.state = {};
     }
     render() {
         let sent = this.props.sentence;
-        return (
-            <div className={"sentence" + (sent.prefered ? " prefer" : "")}>
-                <div className="en">
-                    {sent.parts[0]}
-                    <span className="selfword">
+        if (!this.props.hintMode) {
+            return (
+                <div className={"sentence" + (sent.prefered ? " prefer" : "")}>
+                    <div className="en">
+                        {sent.parts[0]}
+                        <span className="selfword">
+                            {sent.parts[1]}
+                        </span>
+                        {sent.parts[2]}
+                    </div>
+                    <div className="cn">
+                        {sent.cn}
+                    </div>
+                </div>
+            );
+        } else {
+            return (
+                <div className="sentence hintMode">
+                    <div className="en">
+                        {sent.parts[0]}
                         {sent.parts[1]}
-                    </span>
-                    {sent.parts[2]}
+                        {sent.parts[2]}
+                    </div>
                 </div>
-                <div className="cn">
-                    {sent.cn}
-                </div>
-            </div>
-        );
+            );
+        }
     }
 }
 

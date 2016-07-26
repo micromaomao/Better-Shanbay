@@ -1,3 +1,4 @@
+// TODO: determine what to send to PUT /review.
 const electron = require('electron');
 const path = require('path');
 const shanbay = require('./shanbay');
@@ -287,7 +288,6 @@ app.on('ready', function () {
                             resolve();
                         }).catch(err => {
                             console.error(err);
-                            debugger;
                             reject(err);
                         });
                     }));
@@ -305,6 +305,7 @@ app.on('ready', function () {
                     this._waiting = [];
                     this._err = null;
                     this._fetching = false;
+                    this._ended = false;
                     this._fetchingRaw = false;
                     this._runCache();
                 }
@@ -335,7 +336,7 @@ app.on('ready', function () {
                         shan.fetchReview(reviewStackLength).then((reviews => {
                             this._fetchingRaw = false;
                             if (reviews.length == 0) {
-                                throw new Error("No review returned.");
+                                this._ended = true;
                             }
                             this._rawReviewStack = reviews;
                             this._stateChange();
@@ -366,6 +367,9 @@ app.on('ready', function () {
                         this._fetching = false;
                     }).bind(this));
                 }
+                get end() {
+                    return this._ended;
+                }
                 _stateChange() {
                     if (this._stack.length > 0 && this._waiting.length > 0) {
                         this._waiting.forEach(x => x(null, this._stack[0]));
@@ -378,8 +382,12 @@ app.on('ready', function () {
                         this._err = null;
                         setTimeout(this._runCache.bind(this), 1000);
                     }
-                    if (this._waiting.length > 0 && !this.hasRawReview) {
+                    if (!this._ended && this._waiting.length > 0 && !this.hasRawReview) {
                         this.fetchRawReview();
+                    }
+                    if (this._ended) {
+                        this._waiting.forEach(x => x(null, null));
+                        this._waiting = [];
                     }
                     if (this._rawReviewStack.length > 0) {
                         this._runCache();

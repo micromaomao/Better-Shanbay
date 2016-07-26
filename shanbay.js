@@ -594,6 +594,8 @@ shanbay.thesaurus = (word => {
                 reject(err);
             } else if (icm.statusCode == 403) {
                 setTimeout(() => shanbay.thesaurus(word).then(resolve, reject), 1000);
+            } else if (icm.statusCode == 404) {
+                resolve([]);
             } else if (Math.floor(icm.statusCode / 100) != 2) {
                 reject(new Error("Can't access Thesaurus.com: " + icm.statusCode));
             } else {
@@ -619,6 +621,8 @@ shanbay.collins = (word => {
         }, (err, icm, res) => {
             if (err) {
                 reject(err);
+            } else if (icm.statusCode == 404) {
+                resolve([]);
             } else if (Math.floor(icm.statusCode / 100) != 2) {
                 reject(new Error("Can't access Collinsdictionary.com: " + icm.statusCode));
             } else {
