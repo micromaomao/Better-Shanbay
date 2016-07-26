@@ -599,11 +599,16 @@ shanbay.thesaurus = (word => {
             } else if (Math.floor(icm.statusCode / 100) != 2) {
                 reject(new Error("Can't access Thesaurus.com: " + icm.statusCode));
             } else {
-                let matches = res.match(/<span class="text">[a-zA-Z\- ]{1,}/g);
-                if (!matches) {
-                    resolve([]);
-                } else {
-                    resolve(matches.map(x => x.substr('<span class="text">'.length)));
+                try {
+                    let $ = cheerio.load(res);
+                    let $syns = $('.relevancy-list span.text');
+                    let syns = [];
+                    for (let i = 0; i < $syns.length; i ++) {
+                        syns.push($syns.eq(i).text());
+                    }
+                    resolve(syns);
+                } catch (e) {
+                    reject(e);
                 }
             }
         });
