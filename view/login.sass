@@ -4,125 +4,126 @@ $login-height-topmid-border: 3px;
 $login-height-bottom: 40px;
 $login-height-mid: $login-height - $login-height-top - $login-height-bottom;
 
-.top
-    box-sizing: border-box;
-    height: $login-height-top - $login-height-topmid-border;
-    background-color: $color-primary;
-    color: #ffffff;
-    margin: 0;
-    padding: 1.5rem 1rem 1rem 1rem;
-    text-align: right;
-
-    h1
+.loginUI
+    .top
+        box-sizing: border-box;
+        height: $login-height-top - $login-height-topmid-border;
+        background-color: $color-primary;
+        color: #ffffff;
         margin: 0;
-        font-size: 1.5rem;
-        text-align: center;
-        font-weight: normal;
-
-    .for
-        font-size: 0.8rem;
-        background-color: rgba(white, 0.2);
+        padding: 1.5rem 1rem 1rem 1rem;
         text-align: right;
-        display: inline-block;
-        border-radius: 0.9rem;
-        padding: 0.1rem 0.3rem 0.1rem 0.3rem;
 
-    .author
-        font-size: 0.8rem;
-        opacity: 0.8;
-        text-align: right;
-        padding-right: 0.5rem;
+        h1
+            margin: 0;
+            font-size: 1.5rem;
+            text-align: center;
+            font-weight: normal;
 
-.top-mid-border
-    background-color: #dddddd;
-    height: $login-height-topmid-border;
-    .stub
-        background-color: $color-primary-dark;
-        height: $login-height-topmid-border;
-    .stub.animate
-        @extend .loading-strip-animate
-.mid
-    box-sizing: border-box;
-    height: $login-height-mid;
-    overflow: auto;
-
-.mid.attempting
-    font-size: 0.9rem;
-    color: #666666;
-    text-align: center;
-    line-height: 2;
-.mid.waitLogin
-    padding: 0.5rem;
-    .askLoginWay
-        @extend .askCookie;
-        .cookie
-            font-weight: bold;
-    .askCookie
-        color: $color-primary-dark;
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
-    button.yes, button.no
-        width: 100%;
-        display: block;
-        font-size: 0.9rem;
-    button.yes
-        @extend .emp
-    .other
-        text-align: center;
-        a
-            color: $color-primary;
+        .for
             font-size: 0.8rem;
-            text-decoration: underline;
-            margin: 0 0.5rem 0 0.5rem;
-    .errmsg
-        color: $color-error;
-.mid.waitLogin.selectMethod, .mid.attempting
-    padding-top: 2.5rem;
+            background-color: rgba(white, 0.2);
+            text-align: right;
+            display: inline-block;
+            border-radius: 0.9rem;
+            padding: 0.1rem 0.3rem 0.1rem 0.3rem;
 
-.mid.cookieMethod
-    text-align: left;
+        .author
+            font-size: 0.8rem;
+            opacity: 0.8;
+            text-align: right;
+            padding-right: 0.5rem;
 
-$cookie-paster-height: 1.6rem;
-$cookie-paster-btn-width: 4rem;
-$cookie-paster-fontsize: 0.8rem;
-.cookiePaster
-    position: relative;
-    display: block;
-    height: $cookie-paster-height;
-    .cinput
-        position: absolute;
-        left: 0;
-        right: $cookie-paster-btn-width;
-        top: 0;
-        bottom: 0;
-        input
-            padding: 0;
-            margin: 0;
-            line-height: $cookie-paster-height;
-            font-size: $cookie-paster-fontsize;
+    .top-mid-border
+        background-color: #dddddd;
+        height: $login-height-topmid-border;
+        .stub
+            background-color: $color-primary-dark;
+            height: $login-height-topmid-border;
+        .stub.animate
+            @extend .loading-strip-animate
+    .mid
+        box-sizing: border-box;
+        height: $login-height-mid;
+        overflow: auto;
+
+    .mid.attempting
+        font-size: 0.9rem;
+        color: #666666;
+        text-align: center;
+        line-height: 2;
+    .mid.waitLogin
+        padding: 0.5rem;
+        .askLoginWay
+            @extend .askCookie;
+            .cookie
+                font-weight: bold;
+        .askCookie
+            color: $color-primary-dark;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        button.yes, button.no
             width: 100%;
-            height: 100%;
-    .cbutton
-        position: absolute;
-        right: 0;
-        width: $cookie-paster-btn-width;
-        top: 0;
-        bottom: 0;
-        button
-            padding: 0;
-            margin: 0;
-            line-height: $cookie-paster-height;
-            font-size: $cookie-paster-fontsize;
-            width: 100%;
-            height: 100%;
+            display: block;
+            font-size: 0.9rem;
+        button.yes
+            @extend .emp
+        .other
+            text-align: center;
+            a
+                color: $color-primary;
+                font-size: 0.8rem;
+                text-decoration: underline;
+                margin: 0 0.5rem 0 0.5rem;
+        .errmsg
+            color: $color-error;
+    .mid.waitLogin.selectMethod, .mid.attempting
+        padding-top: 2.5rem;
 
-.bottom button
-    height: $login-height-bottom;
-    margin: 0;
+    .mid.cookieMethod
+        text-align: left;
 
-.bottom.onebtn button
-    width: 100%;
-    font-size: 1rem;
-.bottom.twobtn button
-    width: 50%;
-    font-size: 1rem;
+    $cookie-paster-height: 1.6rem;
+    $cookie-paster-btn-width: 4rem;
+    $cookie-paster-fontsize: 0.8rem;
+    .cookiePaster
+        position: relative;
+        display: block;
+        height: $cookie-paster-height;
+        .cinput
+            position: absolute;
+            left: 0;
+            right: $cookie-paster-btn-width;
+            top: 0;
+            bottom: 0;
+            input
+                padding: 0;
+                margin: 0;
+                line-height: $cookie-paster-height;
+                font-size: $cookie-paster-fontsize;
+                width: 100%;
+                height: 100%;
+        .cbutton
+            position: absolute;
+            right: 0;
+            width: $cookie-paster-btn-width;
+            top: 0;
+            bottom: 0;
+            button
+                padding: 0;
+                margin: 0;
+                line-height: $cookie-paster-height;
+                font-size: $cookie-paster-fontsize;
+                width: 100%;
+                height: 100%;
+
+    .bottom button
+        height: $login-height-bottom;
+        margin: 0;
+
+    .bottom.onebtn button
+        width: 100%;
+        font-size: 1rem;
+    .bottom.twobtn button
+        width: 50%;
+        font-size: 1rem;

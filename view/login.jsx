@@ -76,7 +76,7 @@ class LoginPenal extends React.Component {
         window.close();
     }
     handleUseCookie() {
-        this.setState({loginMethod: 'cookie'});
+        this.setState({loginMethod: 'cookie', errmsg: null});
     }
     handleBack() {
         this.setState({loginMethod: null, errmsg: null});
