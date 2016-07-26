@@ -232,7 +232,7 @@ class MainUI extends React.Component {
                         this.handleSynCheck(true);
                         return;
                     } else {
-                        this.handleSynCheck(false);
+                        setTimeout(() => this.handleSynCheck(false), 1);
                     }
                 } else {
                     if (event.key == "Enter" || event.keyCode == 13) {
