@@ -275,6 +275,14 @@ class MainUI extends React.Component {
                     this.finishWord();
                     return;
                 }
+                if (event.key == "1" || event.keyCode == 49) {
+                    event.preventDefault();
+                    current = Object.assign(current, {
+                        markOK: false
+                    });
+                    this.setState({current: current});
+                    return;
+                }
             }
             if (event.key == "0" || event.keyCode == 48) {
                 event.preventDefault();
@@ -721,9 +729,11 @@ class MainUI extends React.Component {
                             addDef(cndef, "cn");
                         }
                         exampleSentences = (<ExampleSentences examples={currentWord.examples} />);
+                        let undoable = current.markOK ? true : false;
                         bottomDesc = (
                             <div className="desc">
                                 {'Press space to show next word.'}
+                                {undoable ? ' Press 1 to undo ( to see this word more times ).' : ''}
                             </div>
                         )
                         break;
