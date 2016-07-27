@@ -24,6 +24,7 @@ app.on('ready', function () {
     console.log("Cookie in " + storedLoginFile);
 
     function startLogin () {
+        shan = new shanbay();
         let win = new electron.BrowserWindow(Object.assign({}, winOpts, {
             resizable: false,
             maximizable: false,
@@ -470,7 +471,6 @@ app.on('ready', function () {
             });
         });
     }
-    shan = new shanbay();
     function initStored() {
         return new Promise((resolve, reject) => {
             fs.readFile(storedLoginFile, {encoding: 'utf-8'}, (err, data) => {
