@@ -1,4 +1,3 @@
-// TODO: Keep track of seconds spent and report it.
 const electron = require('electron');
 const path = require('path');
 const shanbay = require('./shanbay');

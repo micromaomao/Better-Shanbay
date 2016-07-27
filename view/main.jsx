@@ -131,7 +131,9 @@ class MainUI extends React.Component {
             if (sub == "pass" && word.reviewStatus == "fresh") {
                 sub = "master";
             }
-            prevResults[this.state.currentWord.submitId] = sub;
+            let time = (Date.now() - this.state.current.startTime) / 1000;
+            prevResults[this.state.currentWord.submitId]
+                = {result: sub, second: Math.round(time)};
         }
         ipc.send('review', {prevResults: prevResults});
         this.setState({welcome: false, currentWord: null, reviewError: null,
@@ -170,7 +172,8 @@ class MainUI extends React.Component {
             spelling: spelling,
             spellIndex: 0,
             audio: audioNames[0],
-            revealSpell: false
+            revealSpell: false,
+            startTime: Date.now()
         }});
     }
     buildSpell(wordWithHyp) {

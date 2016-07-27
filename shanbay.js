@@ -433,6 +433,11 @@ class shanbay {
             let seconds = [];
             Object.keys(resultMap).forEach(k => {
                 let v = resultMap[k];
+                let second = 1;
+                if (typeof v != "string") {
+                    v = resultMap[k].result;
+                    second = resultMap[k].second;
+                }
                 let rid = parseInt(k);
                 let vi;
                 if (rid >= 0) {
@@ -451,10 +456,11 @@ class shanbay {
                     }
                     ids.push(rid);
                     results.push(vi);
-                    seconds.push(1);
+                    seconds.push(second);
                 }
             });
             let subm = {ids: ids.join(','), results: results.join(','), seconds: seconds.join(',')};
+            debugger;
             this.api('put', 'bdc/review/', {}, subm).then(res => {
                 let su = subm;
                 if (res.status_code != 0) {
