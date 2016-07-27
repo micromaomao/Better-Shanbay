@@ -89,7 +89,7 @@ class MainUI extends React.Component {
             this.setState({stats: {
                 total: arg["num_today"],
                 fail: arg["num_failed"],
-                pending: arg["num_left"] - arg["num_failed"],
+                pending: arg["num_left"] - arg["num_failed"] - arg["num_reviewed"],
                 review: arg["num_reviewed"],
                 pass: arg["num_passed"]
             }});
