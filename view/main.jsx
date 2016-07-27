@@ -542,6 +542,13 @@ class MainUI extends React.Component {
                 }
                 break;
             case "sentence":
+                current = Object.assign(current, {
+                    state: "test",
+                    slide: "image"
+                });
+                this.setState({current: current});
+                break;
+            case "image":
                 this.inShow();
                 break;
         }
@@ -585,6 +592,7 @@ class MainUI extends React.Component {
         }
         let word = null;
         let cw = this.state.currentWord;
+        let imageWebview = null;
         if (this.state.welcome || this.state.end) {
             let stats = this.state.stats;
             if (stats != null) {
@@ -657,8 +665,11 @@ class MainUI extends React.Component {
                             ask = (
                                 <div className="ask askSyn">
                                     <div className="desc">
-                                        {"Type a synonym of this word... or leave empty."}
-                                        {' End with "Enter" key'}
+                                        {"Type a synonym of this word"}
+                                        {" ( or leave empty if you don't know the meaning"}
+                                        {" of this word ) and press Enter."}
+                                        {" If you do know the meaning but can't think of a"}
+                                        {" synonym, type anything and press two Enter."}
                                     </div>
                                     <input type="text" className="askSynInput"
                                         ref={f => this._askSynInput = f} autoFocus
@@ -703,6 +714,14 @@ class MainUI extends React.Component {
                                         examples={currentWord.examples}
                                         hintMode={true} />
                                 );
+                                break;
+                            case "image":
+                                imageWebview = (
+                                    <div className="cweb">
+                                        <WordImageSearchView word={currentWord.word} />
+                                    </div>
+                                );
+                                break;
                         }
                         break;
                     case "show":
@@ -738,7 +757,7 @@ class MainUI extends React.Component {
                                 {'Press space to show next word.'}
                                 {undoable ? ' Press 1 to undo ( to see this word more times ).' : ''}
                             </div>
-                        )
+                        );
                         break;
                 }
                 let pr = this.getPron();
@@ -757,7 +776,7 @@ class MainUI extends React.Component {
                         {exampleSentences}
                         {bottomDesc}
                     </div>
-                )
+                );
             }
         }
         let queueStat = null;
@@ -781,8 +800,9 @@ class MainUI extends React.Component {
         }
         return (
             <div className="mainUI">
-                <div className="mid">
+                <div className={"mid" + ( imageWebview ? " flex" : "" )}>
                     {word}
+                    {imageWebview}
                 </div>
                 <div className="stat">
                     <div className="left">
@@ -931,6 +951,91 @@ class Sentence extends React.Component {
                 </div>
             );
         }
+    }
+}
+
+class WordImageSearchView extends React.Component {
+    constructor() {
+        super();
+        this.ua = "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 6 Build/LYZ28E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.23 Mobile Safari/537.36";
+        this.state = {};
+        this._lastWord = null;
+        this.handleLoadFinish = this.handleLoadFinish.bind(this);
+        this.handleReady = this.handleReady.bind(this);
+        this.handleUnReady = this.handleUnReady.bind(this);
+        this._ww = null;
+    }
+    ww() {
+        /* let url
+            = 'https://www.google.com/search?q='
+            + encodeURIComponent(this.props.word)
+            + '&tbm=isch'; */
+        let url
+            = 'https://www.bing.com/images/search?q='
+            + encodeURIComponent(this.props.word);
+        let ww = new WebView();
+        ww.style.width = "100%";
+        ww.style.height = "100%";
+        ww.className="webview";
+        ww.autosize = false;
+        ww.nodeintegration = false;
+        ww.useragent = this.ua;
+        ww.partition = "google";
+        ww.allowpopups = false;
+        ww.src = url;
+        this.setState({loading: true, ready: false});
+        ww.addEventListener("dom-ready", this.handleLoadFinish);
+        ww.addEventListener("did-stop-loading", this.handleReady);
+        ww.addEventListener("did-start-loading", this.handleUnReady);
+        return ww;
+    }
+    handleLoadFinish() {
+        this.setState({loading: false});
+    }
+    handleReady() {
+        this.setState({ready: true});
+    }
+    handleUnReady() {
+        this.setState({ready: false});
+    }
+    componentDidMount() {
+        this.componentDidUpdate({});
+    }
+    componentDidUpdate(prevProps) {
+        if (prevProps.word != this.props.word) {
+            let ww = this.ww();
+            let selfNode = ReactDOM.findDOMNode(this._container);
+            if (!selfNode)
+                return;
+            if (this._ww) {
+                this._ww.remove();
+            }
+            this._ww = ww;
+            selfNode.appendChild(ww);
+        }
+    }
+    render() {
+        let loading = null;
+        let strip = null;
+        if (this.state.loading) {
+            loading = (
+                <div className="loading">
+                    Just a moment, connecting to bing image search...
+                </div>
+            );
+        }
+        if (!this.state.ready) {
+            strip = (
+                <div className="strip"></div>
+            );
+        }
+        return (
+            <div className="WordImageSearchView">
+                <div ref={f => this._container = f}></div>
+                {loading}
+                {strip}
+            </div>
+        );
     }
 }
 

@@ -55,6 +55,26 @@ $status-bar-height: 1.4rem;
                 background-color: lighten($color-primary, 40%);
             .def.cn
                 background-color: #eeeeee;
+    > .mid.flex
+        display: flex;
+        display: -webkit-flex;
+        justify-content: space-around;
+        -webkit-justify-content: space-around;
+        flex-flow: column;
+        -webkit-flex-flow: column;
+        flex-direction: column;
+        -webkit-flex-direction: column;
+        .cweb
+            flex-grow: 1;
+            -webkit-flex-grow: 1;
+            position: relative;
+            .WordImageSearchView
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+
     > .stat
         position: absolute;
         line-height: $status-bar-height;
@@ -117,10 +137,11 @@ $status-bar-height: 1.4rem;
     .pass, .review, .fail, .pending
         overflow: hidden;
         text-align: right;
-        padding-right: 0.3rem;
         vertical-align: middle;
         box-sizing: border-box;
         display: inline-block;
+    .pass, .review, .fail
+        padding-right: 0.3rem;
     .pass
         background-color: $color-primary;
         color: #ffffff;
@@ -197,3 +218,23 @@ $status-bar-height: 1.4rem;
         padding: 1rem;
     .sentence.prefer
         background-color: lighten($color-primary, 50%);
+
+.WordImageSearchView
+    position: relative;
+    padding: 0;
+    .loading, .webview
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+    .loading
+        padding: 1rem;
+        text-align: center;
+        color: #666666;
+        font-size: 1rem;
+    .strip
+        margin-top: -2px;
+        height: 2px;
+        background-color: $color-primary;
+        @extend .loading-strip-animate

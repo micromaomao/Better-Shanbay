@@ -1,3 +1,5 @@
+// TODO: Show submitQueue error message while waiting for review.
+// TODO: Logout
 const electron = require('electron');
 const path = require('path');
 const shanbay = require('./shanbay');
