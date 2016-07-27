@@ -113,24 +113,25 @@ $status-bar-height: 1.4rem;
     text-align: center;
     font-size: 0.6rem;
     vertical-align: middle;
-    .pass, .review, .fail
+    white-space: nowrap;
+    .pass, .review, .fail, .pending
         overflow: hidden;
         text-align: right;
         padding-right: 0.3rem;
         vertical-align: middle;
         box-sizing: border-box;
+        display: inline-block;
     .pass
-        float: left;
         background-color: $color-primary;
         color: #ffffff;
     .review
-        float: left;
         background-color: lighten($color-primary, 20%);
         color: #ffffff;
     .fail
-        float: right;
         color: #ffffff;
         background-color: $color-error;
+    .pending
+        text-align: center;
 
 .wordSpeller
     font-size: 1.5rem;

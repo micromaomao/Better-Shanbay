@@ -41,7 +41,7 @@ class StatBar extends React.Component {
             <div className="statbar">
                 {r("pass", pass)}
                 {r("review", review)}
-                {pending}
+                {r("pending", pending)}
                 {r("fail", fail)}
             </div>
         );
