@@ -1,8 +1,8 @@
 <h1 align="center">Shanbay Desktop</h1>
-<div align="center">`// Aka. Better Shanbay but that sound problematic.`</div>
+<div align="center"><code>// Aka. Better Shanbay but that sound problematic.</code></div>
 
 <img alt="App" src="doc/readme_images/cover.png" align="center" />
-<div align="center">A new [Shanbay](https://www.shanbay.com/) client for PC.</div>
+<div align="center">A new <a href="https://www.shanbay.com/">Shanbay</a> client for PC.</div>
 
 ## State
 
