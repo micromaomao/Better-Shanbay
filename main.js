@@ -16,6 +16,9 @@ const winOpts = {
 const modalPath = path.join('file://', __dirname, 'view', 'window.html');
 const reviewStackLength = 6; // TODO: changeable;
 
+function prevent(evt) {
+    evt.preventDefault();
+}
 app.on('ready', function () {
     let shan;
     const storedLoginFile = path.join(app.getPath('userData'), "shanbay.cookie");
@@ -101,6 +104,7 @@ app.on('ready', function () {
         }
         let logined = false;
         win.on('ready-to-show', function () {
+            win.webContents.on('will-navigate', prevent);
             win.show();
             win.webContents.send('view', 'login');
             initStored().then((cookie) => {
@@ -138,6 +142,7 @@ app.on('ready', function () {
         win.setMenu(null);
         win.loadURL(modalPath);
         win.on('ready-to-show', function () {
+            win.webContents.on('will-navigate', prevent);
             win.show();
             win.webContents.send('view', 'main');
             ipc.on('user', (evt, arg) => {
