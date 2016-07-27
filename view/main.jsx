@@ -5,6 +5,10 @@ const electron = nodeRequire('electron');
 const win = electron.remote.getCurrentWindow();
 let ipc;
 
+// For those of you who don't know... There is some country blocking it.
+let googleAvailable = false;
+window.testGoogle = testGoogle;
+
 let audios = [];
 function playAudio (url, onComplete) {
     let audio = new Audio(url);
@@ -966,13 +970,17 @@ class WordImageSearchView extends React.Component {
         this._ww = null;
     }
     ww() {
-        /* let url
-            = 'https://www.google.com/search?q='
-            + encodeURIComponent(this.props.word)
-            + '&tbm=isch'; */
-        let url
-            = 'https://www.bing.com/images/search?q='
-            + encodeURIComponent(this.props.word);
+        let url;
+        if (googleAvailable) {
+            url
+                = 'https://www.google.com/search?q='
+                + encodeURIComponent(this.props.word)
+                + '&tbm=isch&hl=en';
+        } else {
+            url
+                = 'https://www.bing.com/images/search?q='
+                + encodeURIComponent(this.props.word);
+        }
         let ww = new WebView();
         ww.style.width = "100%";
         ww.style.height = "100%";
@@ -1020,7 +1028,7 @@ class WordImageSearchView extends React.Component {
         if (this.state.loading) {
             loading = (
                 <div className="loading">
-                    Just a moment, connecting to bing image search...
+                    Just a moment, connecting to {googleAvailable ? "Google" : "Bing"} image search...
                 </div>
             );
         }
@@ -1038,6 +1046,9 @@ class WordImageSearchView extends React.Component {
         );
     }
 }
+function testGoogle() {
+    ipc.send('google');
+}
 
 module.exports = (mount, _ipc) => {
     ipc = _ipc;
@@ -1045,4 +1056,12 @@ module.exports = (mount, _ipc) => {
         <MainUI />,
         mount
     );
+    testGoogle();
+    ipc.on('google', (evt, arg) => {
+        if (!arg.err) {
+            googleAvailable = true;
+        } else {
+            setTimeout(testGoogle, 10000);
+        }
+    });
 };

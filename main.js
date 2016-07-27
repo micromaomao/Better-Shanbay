@@ -5,6 +5,7 @@ const path = require('path');
 const shanbay = require('./shanbay');
 const ipc = electron.ipcMain;
 const fs = require('fs');
+const request = require('request');
 
 const app = electron.app;
 
@@ -145,6 +146,23 @@ app.on('ready', function () {
             win.webContents.on('will-navigate', prevent);
             win.show();
             win.webContents.send('view', 'main');
+            ipc.on('google', (evt, arg) => {
+                console.log("Testing Google availability... If you happens to have used a VPN, that's great! Else don't worry, I'll use Bing.");
+                request({
+                    url: "https://www.google.com/ncr",
+                    method: "get",
+                    followRedirect: false,
+                    timeout: 10000
+                }, (err, icm, res) => {
+                    if (err) {
+                        console.log("Oh... Google don't seems to be available now. We'll continue testing and will use Bing when needed.");
+                        console.log(err.toString());
+                    } else {
+                        console.log("Great! Google reachable.");
+                    }
+                    win.webContents.send('google', {err: err});
+                });
+            });
             ipc.on('user', (evt, arg) => {
                 let ipcResponse = {nickname: shan.nickname, username: shan.username, id: shan.uid};
                 shan.getAvatar().then(img => {
