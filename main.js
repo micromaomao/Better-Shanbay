@@ -1,5 +1,3 @@
-// TODO: Show submitQueue error message while waiting for review.
-// TODO: Logout
 const electron = require('electron');
 const path = require('path');
 const shanbay = require('./shanbay');
@@ -46,8 +44,10 @@ app.on('ready', function () {
         });
         win.setMenu(null);
         win.loadURL(modalPath);
+        let logined = false;
         function loginSuccess() {
             logined = true;
+            if (!win) return;
             win.close();
             startBdc();
         }
@@ -81,15 +81,18 @@ app.on('ready', function () {
         }
         function handleLogin(event, arg) {
             let trialId = arg.trialId;
+            if (!win) return;
             switch (arg.loginMethod) {
                 case 'cookie':
                     shan.cookie = arg.cookie;
                     shan.testLogin().then(() => {
+                        if (!win) return;
                         saveLogin(arg.save ? arg.cookie : null).then(loginSuccess).catch((e) => {
                             console.error(e);
                             console.error("Can't save login...");
                         });
                     }).catch((err) => {
+                        if (!win) return;
                         win.webContents.send('requireLogin', {method: 'cookie', errmsg: err.toString(), trialId: trialId});
                     });
                     break;
@@ -103,7 +106,6 @@ app.on('ready', function () {
                 console.error("Can't remove stored login...");
             });
         }
-        let logined = false;
         win.on('ready-to-show', function () {
             win.webContents.on('will-navigate', prevent);
             win.show();
@@ -136,10 +138,6 @@ app.on('ready', function () {
             minHeight: 550,
             show: false
         }));
-        win.on('close', function () {
-            win = null;
-            app.quit();
-        });
         win.setMenu(null);
         win.loadURL(modalPath);
         win.on('ready-to-show', function () {
@@ -154,6 +152,7 @@ app.on('ready', function () {
                     followRedirect: false,
                     timeout: 10000
                 }, (err, icm, res) => {
+                    if (!win) return;
                     if (err) {
                         console.log("Oh... Google don't seems to be available now. We'll continue testing and will use Bing when needed.");
                         console.log(err.toString());
@@ -166,9 +165,11 @@ app.on('ready', function () {
             ipc.on('user', (evt, arg) => {
                 let ipcResponse = {nickname: shan.nickname, username: shan.username, id: shan.uid};
                 shan.getAvatar().then(img => {
+                    if (!win) return;
                     ipcResponse.avatar = img.toDataURL();
                     win.webContents.send('user', ipcResponse);
                 }).catch(err => {
+                    if (!win) return;
                     ipcResponse.avatar = null;
                     win.webContents.send('user', ipcResponse);
                 });
@@ -178,9 +179,11 @@ app.on('ready', function () {
                 if (tellingStats) return;
                 tellingStats = true;
                 shan.todayStats().then(stat => {
+                    if (!win) return;
                     win.webContents.send('todayStats', stat);
                     tellingStats = false;
                 }).catch(err => {
+                    if (!win) return;
                     win.webContents.send('todayStats', {err: err});
                     tellingStats = false;
                     setTimeout(tellStats, 1000);
@@ -191,6 +194,7 @@ app.on('ready', function () {
             });
             ipc.on('avatar', (evt, arg) => {
                 shan.getAvatar().then(img => {
+                    if (!win) return;
                     win.webContents.send('avatar', {avatar: img.toDataURL()});
                 }).catch(err => win.webContents.send('avatar', {err: err}));
             });
@@ -247,6 +251,7 @@ app.on('ready', function () {
                         this._waiters = [];
                         tellStats();
                     }
+                    if (!win) return;
                     win.webContents.send('submitQueue', {length: this.length, prevErr: this._error ? this._error.toString() : null});
                 }
             }
@@ -424,10 +429,44 @@ app.on('ready', function () {
                 if (arg.prevResults) {
                     queue.push(arg.prevResults);
                 }
-                cachedReviewStack.pop().then(review => win.webContents.send('review', review))
-                    .catch(err => {
-                        win.webContents.send('review', {err: err.toString()});
+                cachedReviewStack.pop().then(review => {
+                    if (!win) return;
+                    win.webContents.send('review', review)
+                }).catch(err => {
+                    win.webContents.send('review', {err: err.toString()});
+                });
+            });
+            let closing = false;
+            let noquit = false;
+            ipc.once('logout', (evt, arg) => {
+                win.webContents.send('quit');
+                closing = true;
+                queue.wait(function () {
+                    fs.unlink(storedLoginFile, err => {
+                        if (err) {
+                            console.error("Can't delete stored login: " + err.toString());
+                        }
+                        noquit = true;
+                        win.close();
                     });
+                });
+            });
+            win.on('close', function (evt) {
+                if (closing) {
+                    win = null;
+                    if (!noquit) {
+                        app.quit();
+                    } else {
+                        startLogin();
+                    }
+                    return;
+                }
+                closing = true;
+                evt.preventDefault();
+                win.webContents.send('quit');
+                queue.wait(function () {
+                    win.close();
+                });
             });
         });
     }

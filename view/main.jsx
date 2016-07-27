@@ -120,11 +120,15 @@ class MainUI extends React.Component {
         ipc.on('submitQueue', ((event, arg) => {
             this.setState({submitQueue: arg});
         }).bind(this));
+        ipc.on('quit', ((event, arg) => {
+            this.setState({end: true, quit: true});
+        }).bind(this));
         this.handleUserPage = this.handleUserPage.bind(this);
         this.handleKeyPress = this.handleKeyPress.bind(this);
         this.handleSpellCheck = this.handleSpellCheck.bind(this);
         this.handleSpellSuccess = this.handleSpellSuccess.bind(this);
         this.handleSynCheck = this.handleSynCheck.bind(this);
+        this.handleLogout = this.handleLogout.bind(this);
     }
     nextWord(result) {
         let prevResults = null;
@@ -142,6 +146,9 @@ class MainUI extends React.Component {
         ipc.send('review', {prevResults: prevResults});
         this.setState({welcome: false, currentWord: null, reviewError: null,
                         current: null});
+    }
+    handleLogout() {
+        ipc.send('logout');
     }
     componentDidMount() {
         ipc.send('user');
@@ -562,15 +569,21 @@ class MainUI extends React.Component {
         let userStat = null
         let statBar = null;
         let avatar = null;
+        let logoutBtn = null;
         if (this.state.user != null) {
             if (this.state.user.avatar) {
-                avatar = (<img src={this.state.user.avatar} className="avatar"/>);
+                avatar = (<img src={this.state.user.avatar} onClick={this.handleUserPage} className="avatar"/>);
+            }
+            if (!this.state.quit) {
+                logoutBtn = (
+                    <button className="logout" onClick={this.handleLogout}>Logout</button>
+                );
             }
             userStat = (
-                <div className="user" onClick={this.handleUserPage}>
+                <div className="user">
                     {avatar}
-                    {" Logged-in as: "}
-                    <span className="username">{this.state.user.nickname.toString()}</span>
+                    <span className="username" onClick={this.handleUserPage}>{this.state.user.nickname.toString()}</span>
+                    {logoutBtn}
                 </div>
             );
         } else {
@@ -597,17 +610,28 @@ class MainUI extends React.Component {
         let word = null;
         let cw = this.state.currentWord;
         let imageWebview = null;
+        let sq = this.state.submitQueue;
         if (this.state.welcome || this.state.end) {
             let stats = this.state.stats;
+            let statDiv = null;
+            if (!this.state.quit && stats) {
+                statDiv = (
+                    <div className="stat">
+                        {stats.pass + " / " + stats.total + " words passed today."}
+                    </div>
+                );
+            }
             if (stats != null) {
                 word = (
                     <div className="mid">
-                        <div className="stat">
-                            {stats.pass + " / " + stats.total + " words passed today."}
-                        </div>
+                        {statDiv}
                         <div className="press">
                             {this.state.end
-                                ? "You finished all today's words. Now check-in using web."
+                                ? (
+                                    this.state.quit
+                                    ? "Saving your work..."
+                                    : "You finished all today's words. Now check-in using web."
+                                )
                                 : "Only keyboard needed. Press any key to start..."}
                         </div>
                     </div>
@@ -622,6 +646,10 @@ class MainUI extends React.Component {
             if (this.state.reviewError) {
                 err = (
                     <div className="err">{this.state.reviewError}</div>
+                );
+            } else if (sq.prevErr) {
+                err = (
+                    <div className="err">{sq.prevErr}</div>
                 );
             }
             word = (
@@ -784,7 +812,6 @@ class MainUI extends React.Component {
             }
         }
         let queueStat = null;
-        let sq = this.state.submitQueue;
         if (sq) {
             if (sq.length == 0 && sq.prevErr === null) {
                 queueStat = (<div className="queue ok">OK</div>);

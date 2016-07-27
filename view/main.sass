@@ -103,7 +103,6 @@ $status-bar-height: 1.4rem;
             padding-left: 1rem;
             padding-right: 1rem;
         .user
-            cursor: pointer;
             display: inline-block;
             vertical-align: middle;
             .avatar
@@ -112,7 +111,17 @@ $status-bar-height: 1.4rem;
                 width: $status-bar-avatar-height;
                 vertical-align: middle;
             .username
+                cursor: pointer;
                 color: $color-primary;
+                vertical-align: middle;
+            .logout
+                display: inline-block;
+                height: $status-bar-height;
+                line-height: $status-bar-height;
+                vertical-align: middle;
+                margin-left: 0.5rem;
+                padding: 0 0.5rem 0 0.5rem;
+                font-size: 0.8rem;
         .statbar
             height: $status-bar-height;
 
