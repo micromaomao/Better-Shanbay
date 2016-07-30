@@ -20,7 +20,7 @@ const winOpts = {
     minHeight: 550,
     show: false,
 };
-const modalPath = path.join('file://', __dirname, 'view', 'window.html');
+const modalPath = path.join('file://', __dirname, 'window.html');
 const reviewStackLength = 10; // TODO: changeable;
 
 function prevent(evt) {

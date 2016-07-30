@@ -1,12 +1,14 @@
 {
   "name": "better-shanbay",
+  "productName": "better-shanbay",
   "version": "0.0.1",
   "description": "Shanbay desktop client",
   "main": "main.js",
   "scripts": {
     "webpack": "webpack",
     "start": "npm run webpack && electron .",
-    "test": "mocha"
+    "test": "mocha",
+    "pack": "npm run webpack && electron-packager . --prune --ignore=\"(\\.git.+|view|doc)\" --all --out=build"
   },
   "repository": {
     "type": "git",
@@ -31,6 +33,7 @@
     "babel-loader": "^6.2.4",
     "babel-preset-react": "^6.11.1",
     "css-loader": "^0.23.1",
+    "electron-packager": "^7.3.0",
     "html-loader": "^0.4.3",
     "markdown-loader": "^0.1.7",
     "node-sass": "^3.8.0",
