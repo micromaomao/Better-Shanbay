@@ -5,6 +5,7 @@ const electron = nodeRequire('electron');
 const win = electron.remote.getCurrentWindow();
 
 let canceled = [];
+let ipc;
 
 class CookiePaster extends React.Component {
     constructor() {
@@ -82,7 +83,6 @@ class LoginPenal extends React.Component {
         this.setState({loginMethod: null, errmsg: null});
     }
     handleLogin() {
-        let ipc = this.props.ipc;
         if (this.state.loginMethod == "cookie") {
             let cookie = this.state.cookie;
             let trial = canceled.push(false) - 1;
@@ -97,7 +97,7 @@ class LoginPenal extends React.Component {
         let checked = this.saveCheckInput.checked;
         this.setState({saveCheck: checked});
         if (!checked) {
-            this.props.ipc.send('rmStoredLogin');
+            ipc.send('rmStoredLogin');
         }
     }
     render() {
@@ -216,9 +216,10 @@ class LoginUI extends React.Component {
     }
 }
 
-module.exports = (mount, ipc) => {
+module.exports = (mount, _ipc) => {
+    ipc = _ipc;
     let uiComp = ReactDOM.render(
-        <LoginUI ipc={ipc} />,
+        <LoginUI />,
         mount
     );
     uiComp.panel.setState({showing: 'attempting', attemptingFrom: "stored login"});
