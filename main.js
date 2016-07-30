@@ -11,6 +11,14 @@ const winOpts = {
     center: true,
     titleBarStyle: "hidden",
     title: "Better Shanbay",
+    resizable: true,
+    maximizable: true,
+    fullscreenable: true,
+    width: 1024,
+    height: 768,
+    minWidth: 750,
+    minHeight: 550,
+    show: false,
 };
 const modalPath = path.join('file://', __dirname, 'view', 'window.html');
 const reviewStackLength = 10; // TODO: changeable;
@@ -26,14 +34,13 @@ app.on('ready', function () {
     function startLogin () {
         shan = new shanbay();
         let win = new electron.BrowserWindow(Object.assign({}, winOpts, {
-            resizable: false,
-            maximizable: false,
-            fullscreenable: false,
             title: "Login Shanbay",
             width: 500,
             height: 350,
             useContentSize: true,
-            show: false
+            resizable: false,
+            maximizable: false,
+            fullscreenable: false,
         }));
         win.on('close', function () {
             win = null;
@@ -125,19 +132,28 @@ app.on('ready', function () {
             });
             ipc.on('login', handleLogin);
             ipc.on('rmStoredLogin', handleRmStored);
+            ipc.on('read', (evt, arg) => handleRead(arg.what));
         });
+        function handleRead(what) {
+            let readWin = new electron.BrowserWindow(Object.assign({}, winOpts, {
+                title: "OK, " + what + "...",
+            }));
+            readWin.on('close', function () {
+                readWin = null;
+            });
+            readWin.setMenu(null);
+            readWin.loadURL(modalPath);
+            readWin.on('ready-to-show', function () {
+                readWin.webContents.on('will-navigate', prevent);
+                readWin.show();
+                readWin.webContents.send('view', 'read');
+                readWin.webContents.send('readwhat', what);
+            });
+        }
     }
     function startBdc () {
         let win = new electron.BrowserWindow(Object.assign({}, winOpts, {
-            resizable: true,
-            maximizable: true,
-            fullscreenable: true,
             title: "Shanbay Words",
-            width: 1024,
-            height: 768,
-            minWidth: 750,
-            minHeight: 550,
-            show: false
         }));
         win.setMenu(null);
         win.loadURL(modalPath);

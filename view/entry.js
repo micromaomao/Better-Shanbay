@@ -14,5 +14,8 @@ ipc.once('view', (event, ctx) => {
         case "main":
             require("./main.jsx")(mount, ipc);
             break;
+        case "read":
+            require("./read.jsx")(mount, ipc);
+            break;
     }
 });

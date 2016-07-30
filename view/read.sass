@@ -1,0 +1,24 @@
+$close-btn-height: 1.8rem;
+.readUI
+    .content
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: $close-btn-height;
+        padding: 1rem;
+        .loading
+            color: #666666;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 1rem;
+        overflow: auto;
+    .close
+        @extend .emp
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: $close-btn-height;
+        font-size: 0.9rem;
+        width: 100%;

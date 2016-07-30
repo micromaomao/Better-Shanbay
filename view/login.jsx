@@ -149,9 +149,9 @@ class LoginPenal extends React.Component {
                             <button className="yes" onClick={this.handleUseCookie}>Yes, use my Cookie!</button>
                             <button className="no">No, use my login and password.</button>
                             <div className="other">
-                                <a>What is Cookie?</a>
+                                <a onClick={evt => ipc.send('read', {what: "cookie"})}>What is Cookie?</a>
                                 <a>Try a demo</a>
-                                <a>Disclaimer</a>
+                                <a onClick={evt => ipc.send('read', {what: "disclaim"})}>Disclaimer</a>
                             </div>
                             {errmsg}
                         </div>
