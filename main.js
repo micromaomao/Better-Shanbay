@@ -13,7 +13,7 @@ const winOpts = {
     title: "Better Shanbay",
 };
 const modalPath = path.join('file://', __dirname, 'view', 'window.html');
-const reviewStackLength = 6; // TODO: changeable;
+const reviewStackLength = 10; // TODO: changeable;
 
 function prevent(evt) {
     evt.preventDefault();
