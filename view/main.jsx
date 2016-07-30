@@ -647,7 +647,7 @@ class MainUI extends React.Component {
                 err = (
                     <div className="err">{this.state.reviewError}</div>
                 );
-            } else if (sq.prevErr) {
+            } else if (sq && sq.prevErr) {
                 err = (
                     <div className="err">{sq.prevErr}</div>
                 );
