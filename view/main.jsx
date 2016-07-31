@@ -65,7 +65,7 @@ class MainUI extends React.Component {
             current: null,
             end: false
         };
-        ipc.on('user', ((event, arg) => {
+        ipc.on('user', (event, arg) => {
             this.setState({user: {
                 nickname: arg.nickname,
                 username: arg.username,
@@ -75,8 +75,8 @@ class MainUI extends React.Component {
             if (!arg.avatar) {
                 ipc.send('avatar');
             }
-        }).bind(this));
-        ipc.on('avatar', ((event, arg) => {
+        });
+        ipc.on('avatar', (event, arg) => {
             if (arg.err) {
                 ipc.send('avatar');
                 return;
@@ -84,8 +84,8 @@ class MainUI extends React.Component {
             this.setState({user: {
                 avatar: arg.avatar
             }});
-        }).bind(this));
-        ipc.on('todayStats', ((event, arg) => {
+        });
+        ipc.on('todayStats', (event, arg) => {
             if (arg.err) {
                 ipc.send('todayStats');
                 return;
@@ -102,8 +102,8 @@ class MainUI extends React.Component {
                     end: true
                 });
             }
-        }).bind(this));
-        ipc.on('review', ((event, arg) => {
+        });
+        ipc.on('review', (event, arg) => {
             if (arg !== null && arg.err) {
                 ipc.send('review', {});
                 this.setState({welcome: false, currentWord: null,
@@ -116,13 +116,13 @@ class MainUI extends React.Component {
             } else {
                 this.setState({end: true});
             }
-        }).bind(this));
-        ipc.on('submitQueue', ((event, arg) => {
+        });
+        ipc.on('submitQueue', (event, arg) => {
             this.setState({submitQueue: arg});
-        }).bind(this));
-        ipc.on('quit', ((event, arg) => {
+        });
+        ipc.on('quit', (event, arg) => {
             this.setState({end: true, quit: true});
-        }).bind(this));
+        });
         this.handleUserPage = this.handleUserPage.bind(this);
         this.handleKeyPress = this.handleKeyPress.bind(this);
         this.handleSpellCheck = this.handleSpellCheck.bind(this);
@@ -705,12 +705,12 @@ class MainUI extends React.Component {
                                     </div>
                                     <input type="text" className="askSynInput"
                                         ref={f => this._askSynInput = f} autoFocus
-                                        onBlur={(evt => {
+                                        onBlur={evt => {
                                             evt.preventDefault();
                                             this._askSynInput &&
                                                 ReactDOM.findDOMNode(this._askSynInput)
                                                     .focus();
-                                        }).bind(this)} />
+                                        }} />
                                     {synError}
                                 </div>
                             );

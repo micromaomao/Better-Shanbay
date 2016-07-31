@@ -217,6 +217,7 @@ app.on('ready', function () {
             });
             class SubmitQueue {
                 constructor() {
+                    this._submit = this._submit.bind(this);
                     this._queue = {};
                     this._processing = null;
                     this._error = null;
@@ -243,19 +244,19 @@ app.on('ready', function () {
                         this._processing = null;
                         return;
                     }
-                    shan.submitReview(this._processing).then((() => {
+                    shan.submitReview(this._processing).then(() => {
                         this._processing = null;
                         if (Object.keys(this._queue).length > 0) {
                             this._submit();
                         }
                         this._statsChange();
-                    }).bind(this)).catch((err => {
+                    }).catch(err => {
                         this._queue = Object.assign({}, this._processing, this._queue);
                         this._error = err;
                         this._processing = null;
                         this._statsChange();
-                        setTimeout(this._submit.bind(this), 1000);
-                    }).bind(this));
+                        setTimeout(this._submit, 1000);
+                    });
                     this._statsChange();
                 }
                 get length() {
@@ -347,6 +348,7 @@ app.on('ready', function () {
             }
             class CachedReviewStack {
                 constructor() {
+                    this._runCache = this._runCache.bind(this);
                     this._rawReviewStack = [];
                     this._stack = [];
                     this._waiting = [];
@@ -358,7 +360,7 @@ app.on('ready', function () {
                 }
                 pop() {
                     this._stateChange();
-                    return new Promise(((resolve, reject) => {
+                    return new Promise((resolve, reject) => {
                         this._waiting.push((err, res) => {
                             if (err) {
                                 reject(err);
@@ -367,7 +369,7 @@ app.on('ready', function () {
                             }
                         });
                         this._stateChange();
-                    }).bind(this));
+                    });
                 }
                 pushRawReview(rev) {
                     Array.prototype.push.apply(this._rawReviewStack, revs);
@@ -379,20 +381,20 @@ app.on('ready', function () {
                 fetchRawReview() {
                     if (this._fetchingRaw) return;
                     this._fetchingRaw = true;
-                    queue.wait((function () {
-                        shan.fetchReview(reviewStackLength).then((reviews => {
+                    queue.wait(() => {
+                        shan.fetchReview(reviewStackLength).then(reviews => {
                             this._fetchingRaw = false;
                             if (reviews.length == 0) {
                                 this._ended = true;
                             }
                             this._rawReviewStack = reviews;
                             this._stateChange();
-                        }).bind(this)).catch((err => {
+                        }).catch(err => {
                             this._fetchingRaw = false;
                             this._err = err;
                             this._stateChange();
-                        }).bind(this));
-                    }).bind(this));
+                        });
+                    });
                 }
                 _runCache() {
                     if (this._fetching) return;
@@ -402,17 +404,17 @@ app.on('ready', function () {
                         this._fetching = false;
                         return;
                     }
-                    processReview(this._rawReviewStack[0]).then((arg => {
+                    processReview(this._rawReviewStack[0]).then(arg => {
                         this._stack.push(arg);
                         this._rawReviewStack.splice(0, 1);
                         this._stateChange();
                         this._fetching = false;
                         this._runCache();
-                    }).bind(this)).catch((err => {
+                    }).catch(err => {
                         this._err = err;
                         this._stateChange();
                         this._fetching = false;
-                    }).bind(this));
+                    });
                 }
                 get end() {
                     return this._ended;
@@ -427,7 +429,7 @@ app.on('ready', function () {
                         this._waiting.forEach(x => x(this._err, null));
                         this._waiting = [];
                         this._err = null;
-                        setTimeout(this._runCache.bind(this), 1000);
+                        setTimeout(this._runCache, 1000);
                     }
                     if (!this._ended && this._waiting.length > 0 && !this.hasRawReview) {
                         this.fetchRawReview();
@@ -458,7 +460,7 @@ app.on('ready', function () {
             ipc.once('logout', (evt, arg) => {
                 win.webContents.send('quit');
                 closing = true;
-                queue.wait(function () {
+                queue.wait(() => {
                     fs.unlink(storedLoginFile, err => {
                         if (err) {
                             console.error("Can't delete stored login: " + err.toString());

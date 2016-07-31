@@ -61,7 +61,7 @@ class ReviewWord {
         return this._json.cn_definition.defn;
     }
     getAudio(name) {
-        return new Promise(((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (!this._json.has_audio) {
                 reject("No audio");
                 return;
@@ -86,7 +86,7 @@ class ReviewWord {
             }
             this._audioCacheWait[name] = [];
             let addrs = this._json.audio_addresses[name];
-            let tryAddr = (function (i, prevErr) {
+            let tryAddr = ((i, prevErr) => {
                 let ars = this._audioCacheWait[name];
                 let addr = addrs[i];
                 if (!addr) {
@@ -100,7 +100,7 @@ class ReviewWord {
                     method: 'get',
                     headers: Object.assign({}, this._headers, {'Accept': 'audio/*'}),
                     encoding: null
-                }, ((err, icm, res) => {
+                }, (err, icm, res) => {
                     if (err) {
                         tryAddr(i + 1, err);
                     } else if (Math.floor(icm.statusCode / 100) != 2) {
@@ -112,17 +112,17 @@ class ReviewWord {
                         resolve(ret);
                         ars.forEach(f => f(null, ret));
                     }
-                }).bind(this));
-            }).bind(this);
+                });
+            });
             tryAddr(0, null);
-        }).bind(this));
+        });
     }
     getNotes(types, shan) {
-        return new Promise(((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             let ownids = [];
             let types = type.split('|');
             let findShared = false;
-            types.forEach((x => {
+            types.forEach(x => {
                 switch (x) {
                     case 'own':
                         ownids = this._json.learning_note_ids;
@@ -131,9 +131,9 @@ class ReviewWord {
                         findShared = true;
                         break;
                 }
-            }).bind(this));
-            let fetchShared = (function () {
-                return new Promise(((resolve, reject) => {
+            });
+            let fetchShared = (() => {
+                return new Promise((resolve, reject) => {
                     shan.api('get', 'bdc/note/', {vocabulary_id: this.wordId}, null).then((res) => {
                         if (res.status_code != 0) {
                             reject(res.msg);
@@ -141,10 +141,10 @@ class ReviewWord {
                         }
                         resolve(res.data.map(x => new WordNote(x)));
                     }).catch(reject);
-                }).bind(this));
-            }).bind(this);
-            let fetchSys = (function (ids) {
-                return new Promise(((resolve, reject) => {
+                });
+            });
+            let fetchSys = (ids => {
+                return new Promise((resolve, reject) => {
                     shan.api('get', 'bdc/note/', {ids: ids}, null).then((res) => {
                         if (res.status_code != 0) {
                             reject(res.msg);
@@ -152,8 +152,8 @@ class ReviewWord {
                         }
                         resolve(res.data.map(x => new WordNote(x)));
                     }).catch(reject);
-                }).bind(this));
-            }).bind(this);
+                });
+            });
             let findActions = [];
             if (ownids.length > 0) {
                 findActions.push(fetchSys(exids));
@@ -166,10 +166,10 @@ class ReviewWord {
                 ss.forEach(x => Array.prototype.push.apply(s, x));
                 resolve(s);
             }).catch(reject);
-        }).bind(this));
+        });
     }
     getExamples(_types, shan) {
-        return new Promise(((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this._exampleCache[_types]) {
                 resolve(this._exampleCache[_types]);
                 return;
@@ -203,8 +203,8 @@ class ReviewWord {
                         break;
                 }
             });
-            let fetchShared = (function () {
-                return new Promise(((resolve, reject) => {
+            let fetchShared = (() => {
+                return new Promise((resolve, reject) => {
                     shan.api('get', 'bdc/example/', {vocabulary_id: this.wordId}, null).then((res) => {
                         if (res.status_code != 0) {
                             reject(res.msg);
@@ -212,10 +212,10 @@ class ReviewWord {
                         }
                         resolve(res.data.map(x => new ExampleSentence(x, false)));
                     }).catch(reject);
-                }).bind(this));
-            }).bind(this);
-            let fetchSys = (function (ids) {
-                return new Promise(((resolve, reject) => {
+                });
+            });
+            let fetchSys = (ids => {
+                return new Promise((resolve, reject) => {
                     shan.api('get', 'bdc/example/', {ids: ids.join(',')}, null).then((res) => {
                         if (res.status_code != 0) {
                             reject(res.msg);
@@ -223,8 +223,8 @@ class ReviewWord {
                         }
                         resolve(res.data.map(x => new ExampleSentence(x, true)));
                     }).catch(reject);
-                }).bind(this));
-            }).bind(this);
+                });
+            });
             let findActions = [];
             if (exids.length > 0) {
                 findActions.push(fetchSys(exids));
@@ -243,7 +243,7 @@ class ReviewWord {
                 this._exampleCacheWait[_types].forEach(f => f(err, null));
                 this._exampleCacheWait[_types] = null;
             });
-        }).bind(this));
+        });
     }
 }
 class ExampleSentence {
@@ -305,7 +305,7 @@ class shanbay {
         return this._userid;
     }
     getAvatar() {
-        return new Promise(((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this.assertUser();
             if (this._avatarUrl == null) throw new Error("Illegal state.");
             let callbacks = [resolve, reject];
@@ -329,7 +329,7 @@ class shanbay {
                     method: 'get',
                     headers: Object.assign({}, this._headers, {'Accept': 'image/*'}),
                     encoding: null
-                }, ((err, icm, res) => {
+                }, (err, icm, res) => {
                     if (err) {
                         reject(err);
                     } else if (Math.floor(icm.statusCode / 100) != 2) {
@@ -337,15 +337,15 @@ class shanbay {
                     } else {
                         resolve(nativeImage.createFromBuffer(res));
                     }
-                }).bind(this));
+                });
             }
-        }).bind(this));
+        });
     }
     api(method, path, qs, body) {
         if (typeof qs != "object") {
             throw new Error("qs must be an object");
         }
-        let promise = new Promise(((resolve, reject) => {
+        let promise = new Promise((resolve, reject) => {
             let reqOp = {
                 baseUrl: this._apiBase,
                 url: path,
@@ -381,12 +381,12 @@ class shanbay {
                     resolve(res);
                 }
             });
-        }).bind(this));
+        });
         return promise;
     }
     testLogin() {
-        return new Promise(((resolve, reject) => {
-            this.api('get', 'user/', {}, null).then(((res) => {
+        return new Promise((resolve, reject) => {
+            this.api('get', 'user/', {}, null).then((res) => {
                 if (!res.userid) {
                     reject('Not logged-in.');
                     return;
@@ -396,38 +396,38 @@ class shanbay {
                 this._avatarUrl = res.avatar;
                 this._nickname = res.nickname;
                 resolve();
-            }).bind(this)).catch(reject);
-        }).bind(this));
+            }).catch(reject);
+        });
     }
     todayStats() {
-        return new Promise(((resolve, reject) => {
-            this.api('get', 'bdc/stats/today/', {}, null).then(((res) => {
+        return new Promise((resolve, reject) => {
+            this.api('get', 'bdc/stats/today/', {}, null).then((res) => {
                 if (res["status_code"] != 0) {
                     reject(res.msg);
                 } else {
                     resolve(res.data);
                 }
-            }).bind(this)).catch(reject);
-        }).bind(this));
+            }).catch(reject);
+        });
     }
     fetchReview(amount) {
-        return new Promise(((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (!(amount > 0)) {
                 reject(new Error("Invalid amount"));
                 return;
             }
-            this.api('get', 'bdc/review/', {len: amount}, null).then(((res) => {
+            this.api('get', 'bdc/review/', {len: amount}, null).then((res) => {
                 if (res.status_code != 0) {
                     reject(res.msg);
                     return;
                 }
                 let words = [];
                 resolve(res.data.reviews.map(reviewData => new ReviewWord(reviewData)));
-            }).bind(this)).catch(reject);
-        }).bind(this));
+            }).catch(reject);
+        });
     }
     submitReview(resultMap) {
-        return new Promise(((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             let ids = [];
             let results = [];
             let seconds = [];
@@ -469,7 +469,7 @@ class shanbay {
                 }
                 resolve();
             }).catch(reject);
-        }).bind(this));
+        });
     }
 }
 
