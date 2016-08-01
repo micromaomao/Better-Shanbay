@@ -582,8 +582,8 @@ shanbay.wordsapi = (() => {
     return fetchWord;
 })();
 
-shanbay.thesaurus = (word => {
-    return new Promise((resolve, reject) => {
+shanbay.thesaurus = (word =>
+    new Promise((resolve, reject) => {
         if (!word.match(/^[a-zA-Z\- ]{1,}$/)) {
             resolve([]);
             return;
@@ -618,10 +618,10 @@ shanbay.thesaurus = (word => {
                 }
             }
         });
-    });
-});
-shanbay.collins = (word => {
-    return new Promise((resolve, reject) => {
+    })
+);
+shanbay.collins = (word =>
+    new Promise((resolve, reject) => {
         request({
             url: "https://www.collinsdictionary.com/dictionary/english/" + encodeURIComponent(word),
             headers: Object.assign({}, pirateAPIHeaders, {
@@ -650,7 +650,7 @@ shanbay.collins = (word => {
                 }
             }
         });
-    });
-});
+    })
+);
 
 module.exports = shanbay;
