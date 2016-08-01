@@ -729,7 +729,7 @@ class MainUI extends React.Component {
                         desc = (
                             <div className="desc">
                                 {"See these information, if you suddenly know"}
-                                {" the meaning fo this word, press 1, else press space."}
+                                {" the meaning for this word, press 1, else press space."}
                             </div>
                         );
                         switch (current.slide) {
