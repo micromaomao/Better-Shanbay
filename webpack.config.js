@@ -4,7 +4,7 @@ module.exports = {
     entry: "./view/entry.js",
     output: {
         path: path.join(__dirname, 'dist/'),
-        publicPath: '../dist/',
+        publicPath: 'dist/',
         filename: "bundle.js"
     },
     module: {
@@ -12,6 +12,7 @@ module.exports = {
             { test: /\.sass$/, loaders: ["style", "css", "sass"] },
             { test: /\.jsx$/, loader: 'babel' },
             { test: /\.md$/, loaders: ["html", "markdown"] },
+            { test: /\.gif$/, loaders: ["file"] },
         ]
     }
 };

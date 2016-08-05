@@ -638,7 +638,10 @@ class MainUI extends React.Component {
                 );
             } else {
                 word = (
-                    <div className="mid">{"Loading today's task..."}</div>
+                    <div className="mid">
+                        <div className="loadingAnimation" />
+                        {"Loading today's task..."}
+                    </div>
                 );
             }
         } else if (cw == null) {
@@ -654,6 +657,7 @@ class MainUI extends React.Component {
             }
             word = (
                 <div className="mid">
+                    <div className="loadingAnimation" />
                     <div className="press">
                         {err === null ? "Just a moment... ( Connection sucks )"
                             : "Oops... Check your network."}
@@ -1055,6 +1059,7 @@ class WordImageSearchView extends React.Component {
         if (this.state.loading) {
             loading = (
                 <div className="loading">
+                    <div className="loadingAnimation" />
                     Just a moment, connecting to {googleAvailable ? "Google" : "Bing"} image search...
                 </div>
             );
