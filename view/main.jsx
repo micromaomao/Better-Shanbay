@@ -218,7 +218,7 @@ class MainUI extends React.Component {
                         revealSpell: false
                     })});
                 }
-                if (!letter.match(/^[a-z]$/g)) {
+                if (!letter.match(/^[a-zA-Z]$/g)) {
                     if (event.key == "Backspace" || event.keyCode == 8) {
                         event.preventDefault();
                         this.handleSpellCheck(null);
@@ -457,8 +457,8 @@ class MainUI extends React.Component {
             return;
         }
         let allsyns = current.syns;
-        let inputedSyn = this._askSynInput.value;
-        let found = allsyns.find(x => x == inputedSyn);
+        let inputedSyn = this._askSynInput.value.toLowerCase();
+        let found = allsyns.find(x => x.toLowerCase() == inputedSyn);
         if (found) {
             current = Object.assign(current, {
                 inputedSyn: inputedSyn,
