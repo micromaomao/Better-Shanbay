@@ -180,7 +180,7 @@ class MainUI extends React.Component {
         this.setState({current: {
             displayWord: wordWithHyp,
             state: "spelling",
-            spelling: spelling,
+            spelling,
             spellIndex: 0,
             audio: audioNames[0],
             revealSpell: false,
@@ -366,11 +366,56 @@ class MainUI extends React.Component {
             return;
         }
         let allsyns = this.getAllSyns();
+        let hintChosen = null;
+        let hintsAvail = [];
+        function chooseRandom(x) {
+            if (x.length === 0) {
+                return null;
+            }
+            return x[Math.floor(Math.random() * x.length)];
+        }
+        if (currentWord.reviewStatus === "failed") {
+            if (allsyns.length > 0) {
+                hintsAvail.push("~= " + chooseRandom(allsyns));
+            }
+            if (currentWord.wordsapi) {
+                let wapis = currentWord.wordsapi.results;
+                if (wapis.length > 0) {
+                    wapis.forEach(x => {
+                        if (x.typeOf) {
+                            hintsAvail.push("Typeof " + chooseRandom(x.typeOf));
+                        }
+                        if (x.hasTypes) {
+                            hintsAvail.push("InstanceOf " + chooseRandom(x.hasTypes));
+                        }
+                        if (x.similarTo) {
+                            hintsAvail.push("SimilarTo " + chooseRandom(x.similarTo));
+                        }
+                        if (x.antonyms) {
+                            hintsAvail.push("!= " + chooseRandom(x.antonyms));
+                        }
+                        if (x.attribute) {
+                            hintsAvail.push("ValueOf " + chooseRandom(x.attribute));
+                        }
+                        if (x.also) {
+                            hintsAvail.push("Also " + chooseRandom(x.also));
+                        }
+                        if (x.substanceOf) {
+                            hintsAvail.push("Extends " + chooseRandom(x.substanceOf));
+                        }
+                    });
+                }
+            }
+            if (hintsAvail.length > 0) {
+                hintChosen = chooseRandom(hintsAvail);
+            }
+        }
         current = Object.assign(current, {
             state: "ask",
             syns: allsyns,
             askSyn: allsyns.length > 0,
-            askResult: null
+            askResult: null,
+            hintChosen
         });
         this.setState({current: current});
     }
@@ -462,7 +507,8 @@ class MainUI extends React.Component {
         if (found) {
             current = Object.assign(current, {
                 inputedSyn: inputedSyn,
-                markOK: true
+                markOK: true,
+                hintChosen: null
             });
             this.setState({current: current});
             this.inShow();
@@ -471,7 +517,8 @@ class MainUI extends React.Component {
             if (inputedSyn === "") {
                 current = Object.assign(current, {
                     inputedSyn: null,
-                    markOK: false
+                    markOK: false,
+                    hintChosen: null
                 });
                 this.setState({current: current});
                 this.inTest();
@@ -484,7 +531,8 @@ class MainUI extends React.Component {
             } else {
                 current = Object.assign(current, {
                     inputedSyn: null,
-                    markOK: true
+                    markOK: true,
+                    hintChosen: null
                 });
                 this.setState({current: current});
                 this.inShow();
@@ -675,6 +723,7 @@ class MainUI extends React.Component {
             let defs = [];
             let exampleSentences = null;
             let bottomDesc = null;
+            let firstHint = null;
             if (!current) {
                 word = (
                     <div className="word">
@@ -688,6 +737,16 @@ class MainUI extends React.Component {
                                     reveal={current.revealSpell} />)
                         break;
                     case "ask":
+                        if (current.hintChosen) {
+                            firstHint = (
+                                <div className="firstHint">
+                                    <div className="hint">
+                                        {current.hintChosen}
+                                    </div>
+                                    If you still don't know the meaning, just press Enter.
+                                </div>
+                            )
+                        }
                         if (current.askSyn) {
                             let synError = null;
                             if (current.synError) {
@@ -700,6 +759,7 @@ class MainUI extends React.Component {
                             }
                             ask = (
                                 <div className="ask askSyn">
+                                    {firstHint}
                                     <div className="desc">
                                         {"Type a synonym of this word"}
                                         {" ( or leave empty if you don't know the meaning"}
@@ -721,6 +781,7 @@ class MainUI extends React.Component {
                         } else {
                             ask = (
                                 <div className="ask">
+                                    {firstHint}
                                     {"Know the meaning of this word?"}
                                     <div className="desc">
                                         {"Press Enter means know, space means don't."}
