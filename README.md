@@ -29,6 +29,8 @@ you can't come up with a synonym.
 
 ![Smart Hint](doc/readme_images/smart_hint.png)
 
+Smarter hint!
+
 ![Collins Dictionary](doc/readme_images/show_collins.png)
 
 <del>Pirated</del> Collins Dictionary.
