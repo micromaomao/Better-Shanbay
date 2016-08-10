@@ -21,25 +21,35 @@ Please describe steps to reproduce, and your environment information ( OS, etc. 
 
 It will ask you to spell the word first. May help remembering it's spelling.
 
+----
+
 ![Synonym](doc/readme_images/test_synonym.png)
 
 It will ask you to tell a synonym of that word so you don't just press "pass"
 without even looking at the word. You may still mark the word as "pass" even if
 you can't come up with a synonym.
 
+----
+
 ![Smart Hint](doc/readme_images/smart_hint.png)
 
 Smarter hint!
 
+----
+
 ![Collins Dictionary](doc/readme_images/show_collins.png)
 
 <del>Pirated</del> Collins Dictionary.
+
+----
 
 ![Google Image](doc/readme_images/show_google_image.png)
 
 Image search engine as word hint!
 
 ( 墙内的朋友不用担心，会自动切换到Bing )
+
+----
 
 ![List Synonym](doc/readme_images/show_synonym.png)
 
