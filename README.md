@@ -27,9 +27,7 @@ It will ask you to tell a synonym of that word so you don't just press "pass"
 without even looking at the word. You may still mark the word as "pass" even if
 you can't come up with a synonym.
 
-![List Synonym](doc/readme_images/show_synonym.png)
-
-You can see 10 synonym of the word.
+![Smart Hint](doc/readme_images/smart_hint.png)
 
 ![Collins Dictionary](doc/readme_images/show_collins.png)
 
@@ -40,6 +38,10 @@ You can see 10 synonym of the word.
 Image search engine as word hint!
 
 ( 墙内的朋友不用担心，会自动切换到Bing )
+
+![List Synonym](doc/readme_images/show_synonym.png)
+
+You can see 10 synonym of the word.
 
 ( OK, that's all. If you want more, why not [tell me](https://github.com/micromaomao/Better-Shanbay/issues)? )
 
