@@ -380,13 +380,18 @@ class MainUI extends React.Component {
             }
             if (currentWord.wordsapi) {
                 let wapis = currentWord.wordsapi.results;
+                let typeOfChoosen = 0;
                 if (wapis.length > 0) {
                     wapis.forEach(x => {
-                        if (x.typeOf) {
+                        if (x.typeOf && typeOfChoosen <= 2) {
                             hintsAvail.push("Typeof " + chooseRandom(x.typeOf));
+                            typeOfChoosen += 1;
+                        }
+                        if (x.verbGroup) {
+                            hintsAvail.push("Typeof " + chooseRandom(x.verbGroup));
                         }
                         if (x.hasTypes) {
-                            hintsAvail.push("InstanceOf " + chooseRandom(x.hasTypes));
+                            hintsAvail.push("PrototypeOf " + chooseRandom(x.hasTypes));
                         }
                         if (x.similarTo) {
                             hintsAvail.push("SimilarTo " + chooseRandom(x.similarTo));
@@ -403,11 +408,16 @@ class MainUI extends React.Component {
                         if (x.substanceOf) {
                             hintsAvail.push("Extends " + chooseRandom(x.substanceOf));
                         }
+                        if (x.partOf) {
+                            hintsAvail.push("PartOf " + chooseRandom(x.partOf));
+                        }
                     });
                 }
             }
             if (hintsAvail.length > 0) {
-                hintChosen = chooseRandom(hintsAvail);
+                let a = chooseRandom(hintsAvail);
+                let b = chooseRandom(hintsAvail);
+                hintChosen = a + (a === b ? "" : " & " + b);
             }
         }
         current = Object.assign(current, {
@@ -743,7 +753,7 @@ class MainUI extends React.Component {
                                     <div className="hint">
                                         {current.hintChosen}
                                     </div>
-                                    If you still don't know the meaning, just press Enter.
+                                   {current.askSyn ? "If you still don't know the meaning, just press Enter." : null} 
                                 </div>
                             )
                         }
