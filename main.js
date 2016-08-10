@@ -1,3 +1,4 @@
+// TODO: Ignore case!
 const electron = require('electron');
 const path = require('path');
 const shanbay = require('./shanbay');
