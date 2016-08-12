@@ -8,6 +8,8 @@ const request = require('request');
 
 const app = electron.app;
 
+// Chromium do respect HTTP_PROXY env.
+
 const winOpts = {
     center: true,
     titleBarStyle: "hidden",

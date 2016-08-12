@@ -63,7 +63,8 @@ class MainUI extends React.Component {
             reviewError: null,
             submitQueue: null,
             current: null,
-            end: false
+            end: false,
+            google: googleAvailable
         };
         ipc.on('user', (event, arg) => {
             this.setState({user: {
@@ -904,6 +905,10 @@ class MainUI extends React.Component {
                 }
             }
         }
+        let googleAvailability = null;
+        if (!this.state.google) {
+            googleAvailability = (<div className="nogoogle" title="instead of Google because we can't reach it.">Using Bing.</div>);
+        }
         return (
             <div className="mainUI">
                 <div className={"mid" + ( imageWebview ? " flex" : "" )}>
@@ -915,6 +920,7 @@ class MainUI extends React.Component {
                         {statBar}
                     </div>
                     <div className="right">
+                        {googleAvailability}
                         {queueStat}
                         {userStat}
                     </div>
@@ -1163,6 +1169,7 @@ module.exports = (mount, _ipc) => {
     ipc.on('google', (evt, arg) => {
         if (!arg.err) {
             googleAvailable = true;
+            uiComp.setState({google: true});
         } else {
             setTimeout(testGoogle, 10000);
         }
