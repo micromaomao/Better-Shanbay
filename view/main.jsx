@@ -890,7 +890,7 @@ class MainUI extends React.Component {
         let queueStat = null;
         if (sq) {
             if (sq.length == 0 && sq.prevErr === null) {
-                queueStat = (<div className="queue ok">OK</div>);
+                queueStat = null;
             } else {
                 if (sq.prevErr === null) {
                     queueStat = (<div className="queue progress">
