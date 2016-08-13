@@ -28,6 +28,7 @@ const reviewStackLength = 10 // TODO: changeable
 function prevent (evt) {
   evt.preventDefault()
 }
+
 app.on('ready', function () {
   let shan
   const storedLoginFile = path.join(app.getPath('userData'), 'shanbay.cookie')
@@ -90,6 +91,7 @@ app.on('ready', function () {
       })
     }
     function handleLogin (event, arg) {
+      // Try to login when received IRC 'login'.
       let trialId = arg.trialId
       if (!win) return
       switch (arg.loginMethod) {
@@ -97,23 +99,44 @@ app.on('ready', function () {
           shan.cookie = arg.cookie
           shan.testLogin().then(() => {
             if (!win) return
+            // If the save checkbox is checked, save the cookie, or else erease it.
             saveLogin(arg.save ? arg.cookie : null).then(loginSuccess).catch((e) => {
               console.error(e)
-              console.error("Can't save login...")
+              console.error("Can't update login storage...")
             })
           }).catch((err) => {
             if (!win) return
             win.webContents.send('requireLogin', {method: 'cookie', errmsg: err.toString(), trialId: trialId})
           })
           break
+        // TODO: Support password login.
         default:
           win.webContents.send('requireLogin', {method: arg.loginMethod, errmsg: 'Unknow method ' + arg.loginMethod, trialId: trialId})
       }
     }
     function handleRmStored (event, arg) {
+      // Erase login storage when user uncheck the box.
       saveLogin(null).catch((e) => {
         console.error(e)
         console.error("Can't remove stored login...")
+      })
+    }
+    function handleRead (what) {
+      // Called when user click "What is cookie" or "disclaimer" etc.
+      let readWin = new electron.BrowserWindow(Object.assign({}, winOpts, {
+        title: 'OK, ' + what + '...'
+      }))
+      readWin.webContents.on('will-navigate', prevent)
+      readWin.on('close', function () {
+        readWin = null
+      })
+      readWin.setMenu(null)
+      readWin.loadURL(modalPath)
+      readWin.on('ready-to-show', function () {
+        readWin.webContents.on('will-navigate', prevent)
+        readWin.show()
+        readWin.webContents.send('view', 'read')
+        readWin.webContents.send('readwhat', what)
       })
     }
     win.on('ready-to-show', function () {
@@ -122,6 +145,7 @@ app.on('ready', function () {
       win.webContents.send('view', 'login')
       initStored().then((cookie) => {
         if (!cookie) {
+          // First run / no login stored
           win.webContents.send('requireLogin', {method: null, errmsg: null, trialId: null})
         } else {
           shan.cookie = cookie
@@ -136,22 +160,6 @@ app.on('ready', function () {
       ipc.on('rmStoredLogin', handleRmStored)
       ipc.on('read', (evt, arg) => handleRead(arg.what))
     })
-    function handleRead (what) {
-      let readWin = new electron.BrowserWindow(Object.assign({}, winOpts, {
-        title: 'OK, ' + what + '...'
-      }))
-      readWin.on('close', function () {
-        readWin = null
-      })
-      readWin.setMenu(null)
-      readWin.loadURL(modalPath)
-      readWin.on('ready-to-show', function () {
-        readWin.webContents.on('will-navigate', prevent)
-        readWin.show()
-        readWin.webContents.send('view', 'read')
-        readWin.webContents.send('readwhat', what)
-      })
-    }
   }
   function startBdc () {
     let win = new electron.BrowserWindow(Object.assign({}, winOpts, {
@@ -182,6 +190,7 @@ app.on('ready', function () {
         })
       })
       ipc.on('user', (evt, arg) => {
+        // Get user information.
         let ipcResponse = {nickname: shan.nickname, username: shan.username, id: shan.uid}
         shan.getAvatar().then(img => {
           if (!win) return
@@ -195,6 +204,7 @@ app.on('ready', function () {
       })
       let tellingStats = false
       function tellStats () {
+        // Update status bar.
         if (tellingStats) return
         tellingStats = true
         shan.todayStats().then(stat => {
@@ -212,6 +222,7 @@ app.on('ready', function () {
         tellStats()
       })
       ipc.on('avatar', (evt, arg) => {
+        // Get the avatar of the user. Called when doing this failed in 'user' IRC event by window.
         shan.getAvatar().then(img => {
           if (!win) return
           win.webContents.send('avatar', {avatar: img.toDataURL()})
@@ -276,25 +287,32 @@ app.on('ready', function () {
         }
       }
       let queue = new SubmitQueue()
+      function initWordObject (wordObject, review) {
+        // Put some simple things in that don't need to look up.
+        Object.assign(wordObject, {
+          wordId: review.wordId,
+          word: review.word,
+          def: review.def,
+          pron: review.pron,
+          submitId: review.reviewId,
+          cndef: review.cnDef,
+          reviewStatus: review.reviewStatus
+        })
+      }
       function processReview (review) {
+        // Look up necessary information of a word and return a object that's ready to give to window.
+        // Put things like audio data in base64 format.
         return new Promise((resolve, reject) => {
-          let toRender = {
-            wordId: review.wordId,
-            word: review.word,
-            def: review.def,
-            pron: review.pron,
-            submitId: review.reviewId,
-            cndef: review.cnDef,
-            reviewStatus: review.reviewStatus,
-            audios: {}
-          }
+          let wordObject = {}
+          initWordObject(wordObject, review)
           let quest = []
           let audioList = review.audioList
+          wordObject.audios = {}
           if (audioList.length > 0) {
             audioList.forEach(audioName => {
               quest.push(new Promise((resolve, reject) => {
                 review.getAudio(audioName).then(audio => {
-                  toRender.audios[audioName] = 'data:' + audio.type + ';base64,' + audio.buff.toString('base64')
+                  wordObject.audios[audioName] = 'data:' + audio.type + ';base64,' + audio.buff.toString('base64')
                   resolve()
                 }).catch(reject)
               }))
@@ -302,11 +320,11 @@ app.on('ready', function () {
           }
           quest.push(new Promise((resolve, reject) => {
             Shanbay.wordsapi(review).then(wordsapi => {
-              toRender.wordsapi = wordsapi
+              wordObject.wordsapi = wordsapi
               resolve()
             }).catch(err => {
               if (err === null) {
-                toRender.wordsapi = null
+                wordObject.wordsapi = null
                 resolve()
               } else {
                 reject(err)
@@ -315,19 +333,19 @@ app.on('ready', function () {
           }))
           quest.push(new Promise((resolve, reject) => {
             Shanbay.thesaurus(review.word).then(syns => {
-              toRender.therSyns = syns
+              wordObject.therSyns = syns
               resolve()
             }).catch(reject)
           }))
           quest.push(new Promise((resolve, reject) => {
             Shanbay.collins(review.word).then(defs => {
-              toRender.collinsDefs = defs
+              wordObject.collinsDefs = defs
               resolve()
             }).catch(reject)
           }))
           quest.push(new Promise((resolve, reject) => {
             review.getExamples('own|shanbay|shared', shan).then(sentences => {
-              toRender.examples = sentences.map(s => {
+              wordObject.examples = sentences.map(s => {
                 return {
                   id: s.id,
                   parts: s.sentenceParts,
@@ -342,13 +360,13 @@ app.on('ready', function () {
             })
           }))
           Promise.all(quest).then(() => {
-            resolve(toRender)
+            resolve(wordObject)
           }).catch(e => {
             reject(e)
           })
         })
       }
-      class CachedReviewStack {
+      class CachedReviewQueue {
         constructor () {
           this._runCache = this._runCache.bind(this)
           this._rawReviewStack = []
@@ -441,12 +459,13 @@ app.on('ready', function () {
           }
         }
       }
-      let cachedReviewStack = new CachedReviewStack()
+      let cachedReviews = new CachedReviewQueue()
       ipc.on('review', (evt, arg) => {
+        // Give one word to window.
         if (arg.prevResults) {
           queue.push(arg.prevResults)
         }
-        cachedReviewStack.pop().then(review => {
+        cachedReviews.pop().then(review => {
           if (!win) return
           win.webContents.send('review', review)
         }).catch(err => {
@@ -454,7 +473,7 @@ app.on('ready', function () {
         })
       })
       let closing = false
-      let noquit = false
+      let noquit = false // If it's true, login window will be showed again instead of quiting the app.
       ipc.once('logout', (evt, arg) => {
         win.webContents.send('quit')
         closing = true
@@ -479,6 +498,8 @@ app.on('ready', function () {
           return
         }
         closing = true
+        // The first time user tried closing the window, wait for all study data to submit before closing, while showing a "submitting" message.
+        // Close the window no matter what the second time.
         evt.preventDefault()
         win.webContents.send('quit')
         queue.wait(function () {
@@ -509,5 +530,6 @@ app.on('ready', function () {
   startLogin()
 })
 app.on('window-all-closed', function (evt) {
+  // Don't quit the app yet!
   evt.preventDefault()
 })

@@ -107,11 +107,9 @@ class MainUI extends React.Component {
       if (arg !== null && arg.err) {
         ipc.send('review', {})
         this.setState({welcome: false, currentWord: null,
-          reviewError: arg.err.toString(),
-        current: null})
+          reviewError: arg.err.toString(), current: null})
       } else if (arg !== null) {
-        this.setState({welcome: false, currentWord: arg,
-        reviewError: null})
+        this.setState({welcome: false, currentWord: arg, reviewError: null})
         this.startWord()
       } else {
         this.setState({end: true})
@@ -131,6 +129,7 @@ class MainUI extends React.Component {
     this.handleLogout = this.handleLogout.bind(this)
   }
   nextWord (result) {
+    // Submit the result of this word and fetch next word.
     let prevResults = null
     if (result && this.state.currentWord) {
       let word = this.state.currentWord
@@ -155,6 +154,7 @@ class MainUI extends React.Component {
     window.addEventListener('keydown', this.handleKeyPress)
   }
   startWord () {
+    // The word data has already been put in state. Start this word.
     let word = this.state.currentWord
     if (word === null) {
       console.error(new Error("?! (Unexpected 'startWord')"))
@@ -223,6 +223,7 @@ class MainUI extends React.Component {
             return
           }
           if (event.key === '9' || event.keyCode === 57) {
+            // Reveal the word and clear user's input.
             event.preventDefault()
             this.setState({current: Object.assign({}, current, {
               revealSpell: true
@@ -239,6 +240,7 @@ class MainUI extends React.Component {
       }
       if (current.state === 'ask') {
         if (current.askSyn) {
+          // Check syn input in real time.
           if (event.key === 'Enter' || event.keyCode === 13) {
             event.preventDefault()
             this.handleSynCheck(true)
@@ -271,11 +273,13 @@ class MainUI extends React.Component {
       }
       if (current.state === 'test') {
         if (event.key === '1' || event.keyCode === 49) {
+          // The user had remembered the word.
           event.preventDefault()
           this.inShow()
           return
         }
         if (event.key === ' ' || event.keyCode === 32) {
+          // The user still has no idea.
           event.preventDefault()
           this.nextTestSlide()
           return
@@ -283,11 +287,13 @@ class MainUI extends React.Component {
       }
       if (current.state === 'show') {
         if (event.key.toLowerCase() === ' ' || event.keyCode === 32) {
+          // Final page over, show next word.
           event.preventDefault()
           this.finishWord()
           return
         }
         if (event.key === '1' || event.keyCode === 49) {
+          // User requested to mark the word as forget ( although they get the syn test correct. )
           event.preventDefault()
           current = Object.assign(current, {
             markOK: false
@@ -304,6 +310,7 @@ class MainUI extends React.Component {
     }
   }
   finishWord () {
+    // Finish this word and submit the result based on current.markOK .
     let current = this.state.current
     let currentWord = this.state.currentWord
     if (!currentWord || !current) {
@@ -313,10 +320,12 @@ class MainUI extends React.Component {
     this.nextWord(ok ? 'pass' : 'forget')
   }
   handleSpellCheck (letter) {
+    // User pressed a single letter.
     if (this.state.currentWord && this.state.current) {
       let current = this.state.current
       if (current.state === 'spelling') {
         if (letter === null) {
+          // Restart
           let spelling = this.buildSpell(current.displayWord)
           this.setState({current: Object.assign({}, current, {
             state: 'spelling',
@@ -338,6 +347,7 @@ class MainUI extends React.Component {
               index++
             }
           } else {
+            // User get it wrong. If this is the second time, show the letter.
             currentSpell = Object.assign({}, currentSpell, {
               show: currentSpell.wrong,
               wrong: true
@@ -358,6 +368,7 @@ class MainUI extends React.Component {
     }
   }
   handleSpellSuccess () {
+    // Ask (Test) the user if they know the word.
     let currentWord = this.state.currentWord
     let current = this.state.current
     if (!currentWord || !current) {
@@ -432,6 +443,7 @@ class MainUI extends React.Component {
     electron.shell.openExternal(link)
   }
   getPron () {
+    // Prase and get IPA from Shanbay or Wordsapi. Return a single string like "uk: xxx, us: xxx".
     let currentWord = this.state.currentWord
     if (!currentWord) {
       return
@@ -466,6 +478,7 @@ class MainUI extends React.Component {
     return null
   }
   getAllSyns () {
+    // Prase and get all syns from wordsapi and thesaurus.com
     let currentWord = this.state.currentWord
     if (!currentWord) {
       return
@@ -512,6 +525,7 @@ class MainUI extends React.Component {
     let inputedSyn = this._askSynInput.value.toLowerCase()
     let found = allsyns.find(x => x.toLowerCase() === inputedSyn)
     if (found) {
+      // User get it right.
       current = Object.assign(current, {
         inputedSyn: inputedSyn,
         markOK: true,
@@ -520,8 +534,10 @@ class MainUI extends React.Component {
       this.setState({current: current})
       this.inShow()
     } else if (showError) {
+      // User get it wrong.
       let oldInputed = current.inputedSyn
       if (inputedSyn === '') {
+        // User gave up
         current = Object.assign(current, {
           inputedSyn: null,
           markOK: false,
@@ -530,12 +546,14 @@ class MainUI extends React.Component {
         this.setState({current: current})
         this.inTest()
       } else if (inputedSyn !== oldInputed) {
+        // User get it wrong but think it's right.
         current = Object.assign(current, {
           synError: true,
           inputedSyn: inputedSyn
         })
         this.setState({current: current})
       } else {
+        // User still think it's right.
         current = Object.assign(current, {
           inputedSyn: null,
           markOK: true,
@@ -545,6 +563,7 @@ class MainUI extends React.Component {
         this.inShow()
       }
     } else {
+      // User's inputing it's answer.
       current = Object.assign(current, {
         synError: false
       })

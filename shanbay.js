@@ -1,6 +1,7 @@
 const electron = require('electron')
 const _request = require('request')
 const request = (o, c) => {
+  // Log all request to console.
   console.log(o.method.toUpperCase() + ' ' + (o.baseUrl || '') + o.url)
   _request(o, (err, icm, res) => {
     if (err) {
@@ -13,6 +14,7 @@ const nativeImage = electron.nativeImage
 const cheerio = require('cheerio')
 
 class ReviewWord {
+  // This class prase the json and send request to look up information from Shanbay. The result is cached in the object.
   constructor (json) {
     this._json = json
     if (!this._json.en_definitions) {
@@ -67,7 +69,7 @@ class ReviewWord {
         return
       }
       if (!this._json.audio_addresses || !this._json.audio_addresses[name]) {
-        reject('No ' + name + ' audio.')
+        reject(`No audio named ${name}.`)
         return
       }
       if (this._audioCache[name]) {
@@ -86,6 +88,7 @@ class ReviewWord {
       }
       this._audioCacheWait[name] = []
       let addrs = this._json.audio_addresses[name]
+      // We will get a array of audio address. Try each one until we success.
       let tryAddr = (i, prevErr) => {
         let ars = this._audioCacheWait[name]
         let addr = addrs[i]
@@ -247,6 +250,7 @@ class ReviewWord {
   }
 }
 class ExampleSentence {
+  // Prase the json.
   constructor (json, prefered) {
     this._json = json
     this._perfered = prefered || false
@@ -265,12 +269,14 @@ class ExampleSentence {
   }
 }
 class WordNote {
+  // TODO
   constructor (json) {
     this._json = json
   }
 }
 
 class shanbay {
+  // Send requests to Shanbay API.
   constructor () {
     this.cookie = null
     this._timeout = 8000
@@ -342,6 +348,7 @@ class shanbay {
     })
   }
   api (method, path, qs, body) {
+    // Call the shanbay API and handle HTTP errors.
     if (typeof qs !== 'object') {
       throw new Error('qs must be an object')
     }
@@ -385,6 +392,7 @@ class shanbay {
     return promise
   }
   testLogin () {
+    // Test if the cookie provided by this.cookie is logined. Init user if so.
     return new Promise((resolve, reject) => {
       this.api('get', 'user/', {}, null).then((res) => {
         if (!res.userid) {
@@ -411,6 +419,7 @@ class shanbay {
     })
   }
   fetchReview (amount) {
+    // Get {amount} review(s) from Shanbay with one request. Won't lookup other information. See processReview in main.js .
     return new Promise((resolve, reject) => {
       if (!(amount > 0)) {
         reject(new Error('Invalid amount'))
