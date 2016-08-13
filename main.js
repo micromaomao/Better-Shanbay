@@ -287,27 +287,22 @@ app.on('ready', function () {
         }
       }
       let queue = new SubmitQueue()
-      function initWordObject (wordObject, review) {
-        // Put some simple things in that don't need to look up.
-        Object.assign(wordObject, {
-          wordId: review.wordId,
-          word: review.word,
-          def: review.def,
-          pron: review.pron,
-          submitId: review.reviewId,
-          cndef: review.cnDef,
-          reviewStatus: review.reviewStatus
-        })
-      }
       function processReview (review) {
         // Look up necessary information of a word and return a object that's ready to give to window.
         // Put things like audio data in base64 format.
         return new Promise((resolve, reject) => {
-          let wordObject = {}
-          initWordObject(wordObject, review)
+          let wordObject = {
+            wordId: review.wordId,
+            word: review.word,
+            def: review.def,
+            pron: review.pron,
+            submitId: review.reviewId,
+            cndef: review.cnDef,
+            reviewStatus: review.reviewStatus,
+            audios: {}
+          }
           let quest = []
           let audioList = review.audioList
-          wordObject.audios = {}
           if (audioList.length > 0) {
             audioList.forEach(audioName => {
               quest.push(new Promise((resolve, reject) => {
@@ -319,7 +314,7 @@ app.on('ready', function () {
             })
           }
           quest.push(new Promise((resolve, reject) => {
-            Shanbay.wordsapi(review).then(wordsapi => {
+            review.wordsapi().then(wordsapi => {
               wordObject.wordsapi = wordsapi
               resolve()
             }).catch(err => {
@@ -332,13 +327,13 @@ app.on('ready', function () {
             })
           }))
           quest.push(new Promise((resolve, reject) => {
-            Shanbay.thesaurus(review.word).then(syns => {
+            review.thesaurus().then(syns => {
               wordObject.therSyns = syns
               resolve()
             }).catch(reject)
           }))
           quest.push(new Promise((resolve, reject) => {
-            Shanbay.collins(review.word).then(defs => {
+            review.collins().then(defs => {
               wordObject.collinsDefs = defs
               resolve()
             }).catch(reject)
@@ -355,7 +350,6 @@ app.on('ready', function () {
               })
               resolve()
             }).catch(err => {
-              console.error(err)
               reject(err)
             })
           }))
@@ -372,6 +366,7 @@ app.on('ready', function () {
           this._rawReviewStack = []
           this._stack = []
           this._waiting = []
+          this._cachedRawReview = {}
           this._err = null
           this._fetching = false
           this._ended = false
@@ -420,9 +415,15 @@ app.on('ready', function () {
             this._fetching = false
             return
           }
-          processReview(this._rawReviewStack[0]).then(arg => {
+          let nRew = this._rawReviewStack[0]
+          if (this._cachedRawReview[nRew.wordId]) {
+            // Some data is cached in the old object which can reduce requests needed.
+            nRew = this._cachedRawReview[nRew.wordId].reParseJSON(nRew.json)
+          }
+          processReview(nRew).then(arg => {
             this._stack.push(arg)
             this._rawReviewStack.splice(0, 1)
+            this._cachedRawReview[nRew.wordId] = nRew
             this._stateChange()
             this._fetching = false
             this._runCache()
@@ -431,6 +432,11 @@ app.on('ready', function () {
             this._stateChange()
             this._fetching = false
           })
+        }
+        dropCached (wordId) {
+          // Drop cache when finished study. Save memory.
+          if (typeof this._cachedRawReview[wordId] === 'undefined') return
+          delete this._cachedRawReview[wordId]
         }
         get end () {
           return this._ended

@@ -13,9 +13,43 @@ const request = (o, c) => {
 const nativeImage = electron.nativeImage
 const cheerio = require('cheerio')
 
+class Cacher {
+  // A stuff that cache all your stuff
+  constructor () {
+    this._caches = {}
+    this._cacheWaits = {}
+  }
+  fetch (content, fetchPromise) {
+    return new Promise((resolve, reject) => {
+      if (typeof this._caches[content] !== 'undefined') {
+        resolve(this._caches[content])
+      } else if (Array.isArray(this._cacheWaits[content])) {
+        this._cacheWaits[content].push([resolve, reject])
+      } else {
+        this._cacheWaits[content] = []
+        fetchPromise(res => {
+          this._caches[content] = res
+          resolve(res)
+          this._cacheWaits[content].forEach(a => a[0](res))
+          delete this._cacheWaits[content]
+        }, err => {
+          reject(err)
+          this._cacheWaits[content].forEach(a => a[1](err))
+          delete this._cacheWaits[content]
+        })
+      }
+    })
+  }
+}
+
 class ReviewWord {
   // This class prase the json and send request to look up information from Shanbay. The result is cached in the object.
   constructor (json) {
+    this.reParseJSON(json)
+    this._cacher = new Cacher()
+  }
+  reParseJSON (json) {
+    // Update word info without destorying cache.
     this._json = json
     if (!this._json.en_definitions) {
       this._json.en_definitions = {en: this._json.pron}
@@ -26,10 +60,10 @@ class ReviewWord {
       defs[defn.pos || '?'] = defn.defn
       this._json.en_definitions = defs
     }
-    this._audioCache = {}
-    this._audioCacheWait = {}
-    this._exampleCache = {}
-    this._exampleCacheWait = {}
+    return this
+  }
+  get json () {
+    return this._json
   }
   get def () {
     return this._json.en_definitions
@@ -63,7 +97,7 @@ class ReviewWord {
     return this._json.cn_definition.defn
   }
   getAudio (name) {
-    return new Promise((resolve, reject) => {
+    return this._cacher.fetch('audio:' + name, (resolve, reject) => {
       if (!this._json.has_audio) {
         reject('No audio')
         return
@@ -72,30 +106,12 @@ class ReviewWord {
         reject(`No audio named ${name}.`)
         return
       }
-      if (this._audioCache[name]) {
-        resolve(this._audioCache[name])
-        return
-      }
-      if (Array.isArray(this._audioCacheWait[name])) {
-        this._audioCacheWait[name].push((err, res) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve(res)
-          }
-        })
-        return
-      }
-      this._audioCacheWait[name] = []
       let addrs = this._json.audio_addresses[name]
       // We will get a array of audio address. Try each one until we success.
       let tryAddr = (i, prevErr) => {
-        let ars = this._audioCacheWait[name]
         let addr = addrs[i]
         if (!addr) {
           reject(prevErr)
-          ars.forEach(f => f(prevErr, null))
-          this._audioCacheWait[name] = null
           return
         }
         request({
@@ -111,9 +127,7 @@ class ReviewWord {
           } else {
             let type = icm.headers['content-type']
             let ret = {buff: res, type: type}
-            this._audioCache[name] = ret
             resolve(ret)
-            ars.forEach(f => f(null, ret))
           }
         })
       }
@@ -121,7 +135,7 @@ class ReviewWord {
     })
   }
   getNotes (_types, shan) {
-    return new Promise((resolve, reject) => {
+    return this._cacher.fetch('notes:' + _types, (resolve, reject) => {
       let ownids = []
       let types = _types.split('|')
       let findShared = false
@@ -172,22 +186,7 @@ class ReviewWord {
     })
   }
   getExamples (_types, shan) {
-    return new Promise((resolve, reject) => {
-      if (this._exampleCache[_types]) {
-        resolve(this._exampleCache[_types])
-        return
-      }
-      if (Array.isArray(this._exampleCacheWait[_types])) {
-        this._exampleCacheWait[_types].push((err, res) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve(res)
-          }
-        })
-        return
-      }
-      this._exampleCacheWait[_types] = []
+    return this._cacher.fetch('examples:' + _types, (resolve, reject) => {
       let sysids = this._json.sys_example_ids
       let ownids = this._json.learning_example_ids
       let types = _types.split('|')
@@ -238,13 +237,36 @@ class ReviewWord {
       Promise.all(findActions).then(ss => {
         let s = []
         ss.forEach(x => Array.prototype.push.apply(s, x))
-        this._exampleCache[_types] = s
         resolve(s)
-        this._exampleCacheWait[_types].forEach(f => f(null, s))
       }).catch(err => {
         reject(err)
-        this._exampleCacheWait[_types].forEach(f => f(err, null))
-        this._exampleCacheWait[_types] = null
+      })
+    })
+  }
+  thesaurus () {
+    return this._cacher.fetch('thesaurus', (resolve, reject) => {
+      shanbay._thesaurus(this.word).then(syns => {
+        resolve(syns)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  }
+  collins () {
+    return this._cacher.fetch('collins', (resolve, reject) => {
+      shanbay._collins(this.word).then(defs => {
+        resolve(defs)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  }
+  wordsapi () {
+    return this._cacher.fetch('wordsapi', (resolve, reject) => {
+      shanbay._wordsapi(this.word).then(res => {
+        resolve(res)
+      }).catch(err => {
+        reject(err)
       })
     })
   }
@@ -285,13 +307,12 @@ class shanbay {
     this._avatarUrl = null
     this._apiBase = 'https://www.shanbay.com/api/v1/'
     this._nickname = null
-    this._avatarCached = null
-    this._avatarCacheWaits = null
     this._headers = {
       'User-Agent': 'BetterShanbay/0',
       'Accept-Language': 'en',
       'Accept': 'application/json'
     }
+    this._cacher = new Cacher()
   }
   assertUser () {
     if (this._userid === -1) {
@@ -311,40 +332,23 @@ class shanbay {
     return this._userid
   }
   getAvatar () {
-    return new Promise((resolve, reject) => {
+    return this._cacher.fetch('avatar', (resolve, reject) => {
       this.assertUser()
-      if (this._avatarUrl == null) throw new Error('Illegal state.')
-      let callbacks = [resolve, reject]
-      if (this._avatarCached) {
-        resolve(this._avatarCached)
-      } else if (this._avatarCacheWaits != null) {
-        this._avatarCacheWaits.push(callbacks)
-      } else {
-        this._avatarCacheWaits = [callbacks]
-        resolve = img => {
-          this._avatarCached = img
-          this._avatarCacheWaits.forEach(x => x[0](img))
-          this._avatarCacheWaits = null
+      if (this._avatarUrl == null) reject('Illegal state.')
+      request({
+        url: this._avatarUrl,
+        method: 'get',
+        headers: Object.assign({}, this._headers, {'Accept': 'image/*'}),
+        encoding: null
+      }, (err, icm, res) => {
+        if (err) {
+          reject(err)
+        } else if (Math.floor(icm.statusCode / 100) !== 2) {
+          reject(res.toString('utf-8') || icm.statusCode)
+        } else {
+          resolve(nativeImage.createFromBuffer(res))
         }
-        reject = err => {
-          this._avatarCacheWaits.forEach(x => x[1](err))
-          this._avatarCacheWaits = null
-        }
-        request({
-          url: this._avatarUrl,
-          method: 'get',
-          headers: Object.assign({}, this._headers, {'Accept': 'image/*'}),
-          encoding: null
-        }, (err, icm, res) => {
-          if (err) {
-            reject(err)
-          } else if (Math.floor(icm.statusCode / 100) !== 2) {
-            reject(res.toString('utf-8') || icm.statusCode)
-          } else {
-            resolve(nativeImage.createFromBuffer(res))
-          }
-        })
-      }
+      })
     })
   }
   api (method, path, qs, body) {
@@ -483,7 +487,7 @@ const pirateAPIHeaders = {
   'accept-language': 'en',
   'user-agent': 'Mozilla/5.0 (X11; Linux x86_64)'
 }
-shanbay.wordsapi = (() => {
+shanbay._wordsapi = (() => {
   let currentWhen = null
   let currentEncrypted = null
 
@@ -515,35 +519,8 @@ shanbay.wordsapi = (() => {
       })
     })
   }
-  function fetchWord (review) {
+  function fetchWord (word) {
     return new Promise((resolve, reject) => {
-      let word = review.word
-      if (review._wordsapiCache) {
-        resolve(review._wordsapiCache)
-        return
-      }
-      if (Array.isArray(review._wordsapiCacheWait)) {
-        review._wordsapiCacheWait.push((err, res) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve(res)
-          }
-        })
-        return
-      }
-      review._wordsapiCacheWait = []
-      let _reject = reject
-      reject = err => {
-        _reject(err)
-        review._wordsapiCacheWait.forEach(f => f(err, null))
-        review._wordsapiCacheWait = null
-      }
-      let _resolve = resolve
-      resolve = res => {
-        _resolve(res)
-        review._wordsapiCache = res
-      }
       if (!currentWhen || !currentEncrypted) {
         fetchApiKey().then(fetch).catch(reject)
       } else {
@@ -588,7 +565,7 @@ shanbay.wordsapi = (() => {
   return fetchWord
 })()
 
-shanbay.thesaurus = word => new Promise((resolve, reject) => {
+shanbay._thesaurus = word => new Promise((resolve, reject) => {
   if (!word.match(/^[a-zA-Z\- ]{1,}$/)) {
     resolve([])
     return
@@ -604,7 +581,7 @@ shanbay.thesaurus = word => new Promise((resolve, reject) => {
     if (err) {
       reject(err)
     } else if (icm.statusCode === 403) {
-      setTimeout(() => shanbay.thesaurus(word).then(resolve, reject), 1000)
+      setTimeout(() => shanbay._thesaurus(word).then(resolve, reject), 1000)
     } else if (icm.statusCode === 404) {
       resolve([])
     } else if (Math.floor(icm.statusCode / 100) !== 2) {
@@ -624,7 +601,7 @@ shanbay.thesaurus = word => new Promise((resolve, reject) => {
     }
   })
 })
-shanbay.collins = word => new Promise((resolve, reject) => {
+shanbay._collins = word => new Promise((resolve, reject) => {
   request({
     url: 'https://www.collinsdictionary.com/dictionary/english/' + encodeURIComponent(word),
     headers: Object.assign({}, pirateAPIHeaders, {

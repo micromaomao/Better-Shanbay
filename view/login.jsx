@@ -110,7 +110,7 @@ class LoginPenal extends React.Component {
         midContent = (
           <div className='mid attempting'>
             <div className='loadingAnimation' /> Attemping to connect with
-            {" " + this.state.attemptingFrom}...
+            {' ' + this.state.attemptingFrom}...
           </div>
         )
         break
