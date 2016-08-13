@@ -881,7 +881,7 @@ class MainUI extends React.Component {
             bottomDesc = (
               <div className='desc'>
                 {'Press space to show next word.'}
-                {undoable ? ' Press 1 to undo ( to see this word more times ).' : ''}
+                {undoable ? ' Press 1 to undo ( to see this word more times ).' : null}
               </div>
             )
             break
@@ -914,15 +914,12 @@ class MainUI extends React.Component {
       } else {
         if (sq.prevErr === null) {
           queueStat = (<div className='queue progress'>
-            Submiting
-            {sq.length} results...
+            Submiting {sq.length} results...
           </div>)
         } else {
           let count = (sq.length <= 1 ? null : ' (' + sq.length + ')')
           queueStat = (<div className='queue error'>
-            Error:
-            {sq.prevErr}
-            {count}
+            Error: {sq.prevErr} {count}
           </div>)
         }
       }
@@ -1053,8 +1050,7 @@ class ExampleSentences extends React.Component {
         {sentences}
         {somethingLeft ? (
           <button className='showmore' onClick={this.handleMore}>
-            Show
-            {this.step} more...
+            Show {this.step} more...
           </button>
           ) : null}
       </div>
@@ -1156,7 +1152,7 @@ class WordImageSearchView extends React.Component {
       loading = (
         <div className='loading'>
           <div className='loadingAnimation' /> Just a moment, connecting to
-          {googleAvailable ? 'Google' : 'Bing'} image search...
+          {' ' + (googleAvailable ? 'Google' : 'Bing')} image search...
         </div>
       )
     }
