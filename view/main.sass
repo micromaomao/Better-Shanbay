@@ -5,6 +5,8 @@ $status-bar-height: 1.4rem;
     left: 0;
     right: 0;
     bottom: 0;
+    .loadingAnimation
+        height: 200px;
 
     > .mid
         position: absolute;
@@ -40,6 +42,12 @@ $status-bar-height: 1.4rem;
             .pron, .desc
                 color: #aaaaaa;
                 font-size: 0.8rem;
+            .firstHint
+                font-size: 0.9rem;
+                padding: 1rem;
+                .hint
+                    color: $color-primary
+                    font-size: 1.3rem
             .askSyn
                 .askSynInput
                     text-align: center;
@@ -102,6 +110,11 @@ $status-bar-height: 1.4rem;
             -webkit-flex-shrink: 1;
             padding-left: 1rem;
             padding-right: 1rem;
+        .nogoogle
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+            color: $color-error;
         .user
             display: inline-block;
             vertical-align: middle;
@@ -129,8 +142,6 @@ $status-bar-height: 1.4rem;
             display: inline-block;
             vertical-align: middle;
             margin-right: 1rem;
-        .queue.ok
-            color: #666666;
         .queue.progress
             color: $color-primary;
         .queue.error

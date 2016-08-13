@@ -5,6 +5,7 @@ const electron = nodeRequire('electron');
 const win = electron.remote.getCurrentWindow();
 
 let canceled = [];
+let ipc;
 
 class CookiePaster extends React.Component {
     constructor() {
@@ -82,7 +83,6 @@ class LoginPenal extends React.Component {
         this.setState({loginMethod: null, errmsg: null});
     }
     handleLogin() {
-        let ipc = this.props.ipc;
         if (this.state.loginMethod == "cookie") {
             let cookie = this.state.cookie;
             let trial = canceled.push(false) - 1;
@@ -97,7 +97,7 @@ class LoginPenal extends React.Component {
         let checked = this.saveCheckInput.checked;
         this.setState({saveCheck: checked});
         if (!checked) {
-            this.props.ipc.send('rmStoredLogin');
+            ipc.send('rmStoredLogin');
         }
     }
     render() {
@@ -111,6 +111,7 @@ class LoginPenal extends React.Component {
                 stubAnimation = true;
                 midContent = (
                     <div className="mid attempting">
+                        <div className="loadingAnimation" />
                         Attemping to connect with {this.state.attemptingFrom}...
                     </div>
                 );
@@ -149,9 +150,9 @@ class LoginPenal extends React.Component {
                             <button className="yes" onClick={this.handleUseCookie}>Yes, use my Cookie!</button>
                             <button className="no">No, use my login and password.</button>
                             <div className="other">
-                                <a>What is Cookie?</a>
+                                <a onClick={evt => ipc.send('read', {what: "cookie"})}>What is Cookie?</a>
                                 <a>Try a demo</a>
-                                <a>Disclaimer</a>
+                                <a onClick={evt => ipc.send('read', {what: "disclaim"})}>Disclaimer</a>
                             </div>
                             {errmsg}
                         </div>
@@ -216,9 +217,10 @@ class LoginUI extends React.Component {
     }
 }
 
-module.exports = (mount, ipc) => {
+module.exports = (mount, _ipc) => {
+    ipc = _ipc;
     let uiComp = ReactDOM.render(
-        <LoginUI ipc={ipc} />,
+        <LoginUI />,
         mount
     );
     uiComp.panel.setState({showing: 'attempting', attemptingFrom: "stored login"});

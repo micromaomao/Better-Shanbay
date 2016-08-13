@@ -63,9 +63,10 @@ class MainUI extends React.Component {
             reviewError: null,
             submitQueue: null,
             current: null,
-            end: false
+            end: false,
+            google: googleAvailable
         };
-        ipc.on('user', ((event, arg) => {
+        ipc.on('user', (event, arg) => {
             this.setState({user: {
                 nickname: arg.nickname,
                 username: arg.username,
@@ -75,8 +76,8 @@ class MainUI extends React.Component {
             if (!arg.avatar) {
                 ipc.send('avatar');
             }
-        }).bind(this));
-        ipc.on('avatar', ((event, arg) => {
+        });
+        ipc.on('avatar', (event, arg) => {
             if (arg.err) {
                 ipc.send('avatar');
                 return;
@@ -84,8 +85,8 @@ class MainUI extends React.Component {
             this.setState({user: {
                 avatar: arg.avatar
             }});
-        }).bind(this));
-        ipc.on('todayStats', ((event, arg) => {
+        });
+        ipc.on('todayStats', (event, arg) => {
             if (arg.err) {
                 ipc.send('todayStats');
                 return;
@@ -102,8 +103,8 @@ class MainUI extends React.Component {
                     end: true
                 });
             }
-        }).bind(this));
-        ipc.on('review', ((event, arg) => {
+        });
+        ipc.on('review', (event, arg) => {
             if (arg !== null && arg.err) {
                 ipc.send('review', {});
                 this.setState({welcome: false, currentWord: null,
@@ -116,13 +117,13 @@ class MainUI extends React.Component {
             } else {
                 this.setState({end: true});
             }
-        }).bind(this));
-        ipc.on('submitQueue', ((event, arg) => {
+        });
+        ipc.on('submitQueue', (event, arg) => {
             this.setState({submitQueue: arg});
-        }).bind(this));
-        ipc.on('quit', ((event, arg) => {
+        });
+        ipc.on('quit', (event, arg) => {
             this.setState({end: true, quit: true});
-        }).bind(this));
+        });
         this.handleUserPage = this.handleUserPage.bind(this);
         this.handleKeyPress = this.handleKeyPress.bind(this);
         this.handleSpellCheck = this.handleSpellCheck.bind(this);
@@ -180,7 +181,7 @@ class MainUI extends React.Component {
         this.setState({current: {
             displayWord: wordWithHyp,
             state: "spelling",
-            spelling: spelling,
+            spelling,
             spellIndex: 0,
             audio: audioNames[0],
             revealSpell: false,
@@ -218,7 +219,7 @@ class MainUI extends React.Component {
                         revealSpell: false
                     })});
                 }
-                if (!letter.match(/^[a-z]$/g)) {
+                if (!letter.match(/^[a-zA-Z]$/g)) {
                     if (event.key == "Backspace" || event.keyCode == 8) {
                         event.preventDefault();
                         this.handleSpellCheck(null);
@@ -366,11 +367,66 @@ class MainUI extends React.Component {
             return;
         }
         let allsyns = this.getAllSyns();
+        let hintChosen = null;
+        let hintsAvail = [];
+        function chooseRandom(x) {
+            if (x.length === 0) {
+                return null;
+            }
+            return x[Math.floor(Math.random() * x.length)];
+        }
+        if (currentWord.reviewStatus === "failed") {
+            if (allsyns.length > 0) {
+                hintsAvail.push("~= " + chooseRandom(allsyns));
+            }
+            if (currentWord.wordsapi) {
+                let wapis = currentWord.wordsapi.results;
+                let typeOfChoosen = 0;
+                if (wapis.length > 0) {
+                    wapis.forEach(x => {
+                        if (x.typeOf && typeOfChoosen <= 2) {
+                            hintsAvail.push("Typeof " + chooseRandom(x.typeOf));
+                            typeOfChoosen += 1;
+                        }
+                        if (x.verbGroup) {
+                            hintsAvail.push("Typeof " + chooseRandom(x.verbGroup));
+                        }
+                        if (x.hasTypes) {
+                            hintsAvail.push("PrototypeOf " + chooseRandom(x.hasTypes));
+                        }
+                        if (x.similarTo) {
+                            hintsAvail.push("SimilarTo " + chooseRandom(x.similarTo));
+                        }
+                        if (x.antonyms) {
+                            hintsAvail.push("!= " + chooseRandom(x.antonyms));
+                        }
+                        if (x.attribute) {
+                            hintsAvail.push("ValueOf " + chooseRandom(x.attribute));
+                        }
+                        if (x.also) {
+                            hintsAvail.push("Also " + chooseRandom(x.also));
+                        }
+                        if (x.substanceOf) {
+                            hintsAvail.push("Extends " + chooseRandom(x.substanceOf));
+                        }
+                        if (x.partOf) {
+                            hintsAvail.push("PartOf " + chooseRandom(x.partOf));
+                        }
+                    });
+                }
+            }
+            if (hintsAvail.length > 0) {
+                let a = chooseRandom(hintsAvail);
+                let b = chooseRandom(hintsAvail);
+                hintChosen = a + (a === b ? "" : " & " + b);
+            }
+        }
         current = Object.assign(current, {
             state: "ask",
             syns: allsyns,
             askSyn: allsyns.length > 0,
-            askResult: null
+            askResult: null,
+            hintChosen
         });
         this.setState({current: current});
     }
@@ -457,12 +513,13 @@ class MainUI extends React.Component {
             return;
         }
         let allsyns = current.syns;
-        let inputedSyn = this._askSynInput.value;
-        let found = allsyns.find(x => x == inputedSyn);
+        let inputedSyn = this._askSynInput.value.toLowerCase();
+        let found = allsyns.find(x => x.toLowerCase() == inputedSyn);
         if (found) {
             current = Object.assign(current, {
                 inputedSyn: inputedSyn,
-                markOK: true
+                markOK: true,
+                hintChosen: null
             });
             this.setState({current: current});
             this.inShow();
@@ -471,7 +528,8 @@ class MainUI extends React.Component {
             if (inputedSyn === "") {
                 current = Object.assign(current, {
                     inputedSyn: null,
-                    markOK: false
+                    markOK: false,
+                    hintChosen: null
                 });
                 this.setState({current: current});
                 this.inTest();
@@ -484,7 +542,8 @@ class MainUI extends React.Component {
             } else {
                 current = Object.assign(current, {
                     inputedSyn: null,
-                    markOK: true
+                    markOK: true,
+                    hintChosen: null
                 });
                 this.setState({current: current});
                 this.inShow();
@@ -638,7 +697,10 @@ class MainUI extends React.Component {
                 );
             } else {
                 word = (
-                    <div className="mid">{"Loading today's task..."}</div>
+                    <div className="mid">
+                        <div className="loadingAnimation" />
+                        {"Loading today's task..."}
+                    </div>
                 );
             }
         } else if (cw == null) {
@@ -647,13 +709,14 @@ class MainUI extends React.Component {
                 err = (
                     <div className="err">{this.state.reviewError}</div>
                 );
-            } else if (sq.prevErr) {
+            } else if (sq && sq.prevErr) {
                 err = (
                     <div className="err">{sq.prevErr}</div>
                 );
             }
             word = (
                 <div className="mid">
+                    <div className="loadingAnimation" />
                     <div className="press">
                         {err === null ? "Just a moment... ( Connection sucks )"
                             : "Oops... Check your network."}
@@ -671,6 +734,7 @@ class MainUI extends React.Component {
             let defs = [];
             let exampleSentences = null;
             let bottomDesc = null;
+            let firstHint = null;
             if (!current) {
                 word = (
                     <div className="word">
@@ -684,6 +748,16 @@ class MainUI extends React.Component {
                                     reveal={current.revealSpell} />)
                         break;
                     case "ask":
+                        if (current.hintChosen) {
+                            firstHint = (
+                                <div className="firstHint">
+                                    <div className="hint">
+                                        {current.hintChosen}
+                                    </div>
+                                   {current.askSyn ? "If you still don't know the meaning, just press Enter." : null} 
+                                </div>
+                            )
+                        }
                         if (current.askSyn) {
                             let synError = null;
                             if (current.synError) {
@@ -696,6 +770,7 @@ class MainUI extends React.Component {
                             }
                             ask = (
                                 <div className="ask askSyn">
+                                    {firstHint}
                                     <div className="desc">
                                         {"Type a synonym of this word"}
                                         {" ( or leave empty if you don't know the meaning"}
@@ -705,18 +780,19 @@ class MainUI extends React.Component {
                                     </div>
                                     <input type="text" className="askSynInput"
                                         ref={f => this._askSynInput = f} autoFocus
-                                        onBlur={(evt => {
+                                        onBlur={evt => {
                                             evt.preventDefault();
                                             this._askSynInput &&
                                                 ReactDOM.findDOMNode(this._askSynInput)
                                                     .focus();
-                                        }).bind(this)} />
+                                        }} />
                                     {synError}
                                 </div>
                             );
                         } else {
                             ask = (
                                 <div className="ask">
+                                    {firstHint}
                                     {"Know the meaning of this word?"}
                                     <div className="desc">
                                         {"Press Enter means know, space means don't."}
@@ -729,7 +805,7 @@ class MainUI extends React.Component {
                         desc = (
                             <div className="desc">
                                 {"See these information, if you suddenly know"}
-                                {" the meaning fo this word, press 1, else press space."}
+                                {" the meaning for this word, press 1, else press space."}
                             </div>
                         );
                         switch (current.slide) {
@@ -814,7 +890,7 @@ class MainUI extends React.Component {
         let queueStat = null;
         if (sq) {
             if (sq.length == 0 && sq.prevErr === null) {
-                queueStat = (<div className="queue ok">OK</div>);
+                queueStat = null;
             } else {
                 if (sq.prevErr === null) {
                     queueStat = (<div className="queue progress">
@@ -829,6 +905,10 @@ class MainUI extends React.Component {
                 }
             }
         }
+        let googleAvailability = null;
+        if (!this.state.google) {
+            googleAvailability = (<div className="nogoogle" title="instead of Google because we can't reach it.">Using Bing.</div>);
+        }
         return (
             <div className="mainUI">
                 <div className={"mid" + ( imageWebview ? " flex" : "" )}>
@@ -840,6 +920,7 @@ class MainUI extends React.Component {
                         {statBar}
                     </div>
                     <div className="right">
+                        {googleAvailability}
                         {queueStat}
                         {userStat}
                     </div>
@@ -1055,6 +1136,7 @@ class WordImageSearchView extends React.Component {
         if (this.state.loading) {
             loading = (
                 <div className="loading">
+                    <div className="loadingAnimation" />
                     Just a moment, connecting to {googleAvailable ? "Google" : "Bing"} image search...
                 </div>
             );
@@ -1087,6 +1169,7 @@ module.exports = (mount, _ipc) => {
     ipc.on('google', (evt, arg) => {
         if (!arg.err) {
             googleAvailable = true;
+            uiComp.setState({google: true});
         } else {
             setTimeout(testGoogle, 10000);
         }

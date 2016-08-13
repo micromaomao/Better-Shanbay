@@ -1,3 +1,4 @@
+// TODO: Ignore case!
 const electron = require('electron');
 const path = require('path');
 const shanbay = require('./shanbay');
@@ -7,13 +8,23 @@ const request = require('request');
 
 const app = electron.app;
 
+// Chromium do respect HTTP_PROXY env.
+
 const winOpts = {
     center: true,
     titleBarStyle: "hidden",
     title: "Better Shanbay",
+    resizable: true,
+    maximizable: true,
+    fullscreenable: true,
+    width: 1024,
+    height: 768,
+    minWidth: 750,
+    minHeight: 550,
+    show: false,
 };
-const modalPath = path.join('file://', __dirname, 'view', 'window.html');
-const reviewStackLength = 6; // TODO: changeable;
+const modalPath = path.join('file://', __dirname, 'window.html');
+const reviewStackLength = 10; // TODO: changeable;
 
 function prevent(evt) {
     evt.preventDefault();
@@ -26,14 +37,13 @@ app.on('ready', function () {
     function startLogin () {
         shan = new shanbay();
         let win = new electron.BrowserWindow(Object.assign({}, winOpts, {
-            resizable: false,
-            maximizable: false,
-            fullscreenable: false,
             title: "Login Shanbay",
             width: 500,
             height: 350,
             useContentSize: true,
-            show: false
+            resizable: false,
+            maximizable: false,
+            fullscreenable: false,
         }));
         win.on('close', function () {
             win = null;
@@ -125,19 +135,28 @@ app.on('ready', function () {
             });
             ipc.on('login', handleLogin);
             ipc.on('rmStoredLogin', handleRmStored);
+            ipc.on('read', (evt, arg) => handleRead(arg.what));
         });
+        function handleRead(what) {
+            let readWin = new electron.BrowserWindow(Object.assign({}, winOpts, {
+                title: "OK, " + what + "...",
+            }));
+            readWin.on('close', function () {
+                readWin = null;
+            });
+            readWin.setMenu(null);
+            readWin.loadURL(modalPath);
+            readWin.on('ready-to-show', function () {
+                readWin.webContents.on('will-navigate', prevent);
+                readWin.show();
+                readWin.webContents.send('view', 'read');
+                readWin.webContents.send('readwhat', what);
+            });
+        }
     }
     function startBdc () {
         let win = new electron.BrowserWindow(Object.assign({}, winOpts, {
-            resizable: true,
-            maximizable: true,
-            fullscreenable: true,
             title: "Shanbay Words",
-            width: 1024,
-            height: 768,
-            minWidth: 750,
-            minHeight: 550,
-            show: false
         }));
         win.setMenu(null);
         win.loadURL(modalPath);
@@ -201,6 +220,7 @@ app.on('ready', function () {
             });
             class SubmitQueue {
                 constructor() {
+                    this._submit = this._submit.bind(this);
                     this._queue = {};
                     this._processing = null;
                     this._error = null;
@@ -227,19 +247,19 @@ app.on('ready', function () {
                         this._processing = null;
                         return;
                     }
-                    shan.submitReview(this._processing).then((() => {
+                    shan.submitReview(this._processing).then(() => {
                         this._processing = null;
                         if (Object.keys(this._queue).length > 0) {
                             this._submit();
                         }
                         this._statsChange();
-                    }).bind(this)).catch((err => {
+                    }).catch(err => {
                         this._queue = Object.assign({}, this._processing, this._queue);
                         this._error = err;
                         this._processing = null;
                         this._statsChange();
-                        setTimeout(this._submit.bind(this), 1000);
-                    }).bind(this));
+                        setTimeout(this._submit, 1000);
+                    });
                     this._statsChange();
                 }
                 get length() {
@@ -331,6 +351,7 @@ app.on('ready', function () {
             }
             class CachedReviewStack {
                 constructor() {
+                    this._runCache = this._runCache.bind(this);
                     this._rawReviewStack = [];
                     this._stack = [];
                     this._waiting = [];
@@ -342,7 +363,7 @@ app.on('ready', function () {
                 }
                 pop() {
                     this._stateChange();
-                    return new Promise(((resolve, reject) => {
+                    return new Promise((resolve, reject) => {
                         this._waiting.push((err, res) => {
                             if (err) {
                                 reject(err);
@@ -351,7 +372,7 @@ app.on('ready', function () {
                             }
                         });
                         this._stateChange();
-                    }).bind(this));
+                    });
                 }
                 pushRawReview(rev) {
                     Array.prototype.push.apply(this._rawReviewStack, revs);
@@ -363,20 +384,20 @@ app.on('ready', function () {
                 fetchRawReview() {
                     if (this._fetchingRaw) return;
                     this._fetchingRaw = true;
-                    queue.wait((function () {
-                        shan.fetchReview(reviewStackLength).then((reviews => {
+                    queue.wait(() => {
+                        shan.fetchReview(reviewStackLength).then(reviews => {
                             this._fetchingRaw = false;
                             if (reviews.length == 0) {
                                 this._ended = true;
                             }
                             this._rawReviewStack = reviews;
                             this._stateChange();
-                        }).bind(this)).catch((err => {
+                        }).catch(err => {
                             this._fetchingRaw = false;
                             this._err = err;
                             this._stateChange();
-                        }).bind(this));
-                    }).bind(this));
+                        });
+                    });
                 }
                 _runCache() {
                     if (this._fetching) return;
@@ -386,17 +407,17 @@ app.on('ready', function () {
                         this._fetching = false;
                         return;
                     }
-                    processReview(this._rawReviewStack[0]).then((arg => {
+                    processReview(this._rawReviewStack[0]).then(arg => {
                         this._stack.push(arg);
                         this._rawReviewStack.splice(0, 1);
                         this._stateChange();
                         this._fetching = false;
                         this._runCache();
-                    }).bind(this)).catch((err => {
+                    }).catch(err => {
                         this._err = err;
                         this._stateChange();
                         this._fetching = false;
-                    }).bind(this));
+                    });
                 }
                 get end() {
                     return this._ended;
@@ -411,7 +432,7 @@ app.on('ready', function () {
                         this._waiting.forEach(x => x(this._err, null));
                         this._waiting = [];
                         this._err = null;
-                        setTimeout(this._runCache.bind(this), 1000);
+                        setTimeout(this._runCache, 1000);
                     }
                     if (!this._ended && this._waiting.length > 0 && !this.hasRawReview) {
                         this.fetchRawReview();
@@ -442,7 +463,7 @@ app.on('ready', function () {
             ipc.once('logout', (evt, arg) => {
                 win.webContents.send('quit');
                 closing = true;
-                queue.wait(function () {
+                queue.wait(() => {
                     fs.unlink(storedLoginFile, err => {
                         if (err) {
                             console.error("Can't delete stored login: " + err.toString());
