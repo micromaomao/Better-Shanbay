@@ -1,260 +1,260 @@
 $status-bar-height: 1.4rem;
 .mainUI
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  .loadingAnimation
+    height: 200px;
+
+  > .mid
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    .loadingAnimation
-        height: 200px;
+    bottom: $status-bar-height;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform-style: preserve-3d;
 
     > .mid
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      transform: translateY(-50%);
+      .stat
+        color: $color-primary;
+        font-size: 1.2rem;
+      .press
+        color: #aaaaaa;
+        font-size: 0.8rem;
+      .err
+        color: $color-error;
+        font-size: 1rem;
+
+    .word
+      padding: 1rem;
+      text-align: center;
+      font-size: 2rem;
+      .pron, .desc
+        color: #aaaaaa;
+        font-size: 0.8rem;
+      .firstHint
+        font-size: 0.9rem;
+        padding: 1rem;
+        .hint
+          color: $color-primary
+          font-size: 1.3rem
+      .askSyn
+        .askSynInput
+          text-align: center;
+          width: 400px;
+        .error
+          color: $color-error;
+          font-size: 0.9rem;
+      .def
+        @extend .testSlide;
+      .def.collins
+        background-color: lighten(red, 40%);
+      .def.shanbay
+        background-color: lighten($color-primary, 40%);
+      .def.cn
+        background-color: #eeeeee;
+  > .mid.flex
+    display: flex;
+    display: -webkit-flex;
+    justify-content: space-around;
+    -webkit-justify-content: space-around;
+    flex-flow: column;
+    -webkit-flex-flow: column;
+    flex-direction: column;
+    -webkit-flex-direction: column;
+    .cweb
+      flex-grow: 1;
+      -webkit-flex-grow: 1;
+      position: relative;
+      .WordImageSearchView
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        bottom: $status-bar-height;
-        overflow-x: hidden;
-        overflow-y: auto;
-        transform-style: preserve-3d;
-
-        > .mid
-            text-align: center;
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            transform: translateY(-50%);
-            .stat
-                color: $color-primary;
-                font-size: 1.2rem;
-            .press
-                color: #aaaaaa;
-                font-size: 0.8rem;
-            .err
-              color: $color-error;
-              font-size: 1rem;
-
-        .word
-            padding: 1rem;
-            text-align: center;
-            font-size: 2rem;
-            .pron, .desc
-                color: #aaaaaa;
-                font-size: 0.8rem;
-            .firstHint
-                font-size: 0.9rem;
-                padding: 1rem;
-                .hint
-                    color: $color-primary
-                    font-size: 1.3rem
-            .askSyn
-                .askSynInput
-                    text-align: center;
-                    width: 400px;
-                .error
-                    color: $color-error;
-                    font-size: 0.9rem;
-            .def
-                @extend .testSlide;
-            .def.collins
-                background-color: lighten(red, 40%);
-            .def.shanbay
-                background-color: lighten($color-primary, 40%);
-            .def.cn
-                background-color: #eeeeee;
-    > .mid.flex
-        display: flex;
-        display: -webkit-flex;
-        justify-content: space-around;
-        -webkit-justify-content: space-around;
-        flex-flow: column;
-        -webkit-flex-flow: column;
-        flex-direction: column;
-        -webkit-flex-direction: column;
-        .cweb
-            flex-grow: 1;
-            -webkit-flex-grow: 1;
-            position: relative;
-            .WordImageSearchView
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-
-    > .stat
-        position: absolute;
-        line-height: $status-bar-height;
-        left: 0;
-        right: 0;
         bottom: 0;
-        font-size: 0.8rem;
-        background-color: #eeeeee;
-        border-top: solid 1px #dddddd;
-        display: flex;
-        display: -webkit-flex;
-        justify-content: space-around;
-        -webkit-justify-content: space-around;
-        flex-flow: row;
-        -webkit-flex-flow: row;
-        flex-direction: row;
-        -webkit-flex-direction: row;
-        .left
-            flex-grow: 1;
-            -webkit-flex-grow: 1;
-            padding-left: 1rem;
-            padding-right: 1rem;
-        .right
-            flex-shrink: 1;
-            -webkit-flex-shrink: 1;
-            padding-left: 1rem;
-            padding-right: 1rem;
-        .nogoogle
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 0.5rem;
-            color: $color-error;
-        .user
-            display: inline-block;
-            vertical-align: middle;
-            .avatar
-                $status-bar-avatar-height: $status-bar-height - 0.2rem;
-                height: $status-bar-avatar-height;
-                width: $status-bar-avatar-height;
-                vertical-align: middle;
-            .username
-                cursor: pointer;
-                color: $color-primary;
-                vertical-align: middle;
-            .logout
-                display: inline-block;
-                height: $status-bar-height;
-                line-height: $status-bar-height;
-                vertical-align: middle;
-                margin-left: 0.5rem;
-                padding: 0 0.5rem 0 0.5rem;
-                font-size: 0.8rem;
-        .statbar
-            height: $status-bar-height;
 
-        .queue
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 1rem;
-        .queue.progress
-            color: $color-primary;
-        .queue.error
-            color: $color-error;
+  > .stat
+    position: absolute;
+    line-height: $status-bar-height;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    font-size: 0.8rem;
+    background-color: #eeeeee;
+    border-top: solid 1px #dddddd;
+    display: flex;
+    display: -webkit-flex;
+    justify-content: space-around;
+    -webkit-justify-content: space-around;
+    flex-flow: row;
+    -webkit-flex-flow: row;
+    flex-direction: row;
+    -webkit-flex-direction: row;
+    .left
+      flex-grow: 1;
+      -webkit-flex-grow: 1;
+      padding-left: 1rem;
+      padding-right: 1rem;
+    .right
+      flex-shrink: 1;
+      -webkit-flex-shrink: 1;
+      padding-left: 1rem;
+      padding-right: 1rem;
+    .nogoogle
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+      color: $color-error;
+    .user
+      display: inline-block;
+      vertical-align: middle;
+      .avatar
+        $status-bar-avatar-height: $status-bar-height - 0.2rem;
+        height: $status-bar-avatar-height;
+        width: $status-bar-avatar-height;
+        vertical-align: middle;
+      .username
+        cursor: pointer;
+        color: $color-primary;
+        vertical-align: middle;
+      .logout
+        display: inline-block;
+        height: $status-bar-height;
+        line-height: $status-bar-height;
+        vertical-align: middle;
+        margin-left: 0.5rem;
+        padding: 0 0.5rem 0 0.5rem;
+        font-size: 0.8rem;
+    .statbar
+      height: $status-bar-height;
+
+    .queue
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 1rem;
+    .queue.progress
+      color: $color-primary;
+    .queue.error
+      color: $color-error;
 
 .statbar
-    height: 1.2rem;
-    background-color: #eeeeee;
-    text-align: center;
-    font-size: 0.6rem;
+  height: 1.2rem;
+  background-color: #eeeeee;
+  text-align: center;
+  font-size: 0.6rem;
+  vertical-align: middle;
+  white-space: nowrap;
+  .pass, .review, .fail, .pending
+    overflow: hidden;
+    text-align: right;
     vertical-align: middle;
-    white-space: nowrap;
-    .pass, .review, .fail, .pending
-        overflow: hidden;
-        text-align: right;
-        vertical-align: middle;
-        box-sizing: border-box;
-        display: inline-block;
-    .pass, .review, .fail
-        padding-right: 0.3rem;
-    .pass
-        background-color: $color-primary;
-        color: #ffffff;
-    .review
-        background-color: lighten($color-primary, 20%);
-        color: #ffffff;
-    .fail
-        color: #ffffff;
-        background-color: $color-error;
-    .pending
-        text-align: center;
+    box-sizing: border-box;
+    display: inline-block;
+  .pass, .review, .fail
+    padding-right: 0.3rem;
+  .pass
+    background-color: $color-primary;
+    color: #ffffff;
+  .review
+    background-color: lighten($color-primary, 20%);
+    color: #ffffff;
+  .fail
+    color: #ffffff;
+    background-color: $color-error;
+  .pending
+    text-align: center;
 
 .wordSpeller
-    font-size: 1.5rem;
-    font-family: monospace;
-    .letter
-        background-color: #eeeeee;
-        border-radius: 5px;
-        margin: 4px;
-        display: inline-block;
-        padding: 2px;
-    .letter.show
-        color: $color-primary;
-        background-color: transparent;
-    .letter.hide
-        color: #eeeeee;
-    .letter.wrong.show
-        background-color: lighten(red, 35%);
-        color: darken(red, 20%);
-    .letter.wrong.hide
-        background-color: lighten(red, 35%);
-        color: lighten(red, 35%);
+  font-size: 1.5rem;
+  font-family: monospace;
+  .letter
+    background-color: #eeeeee;
+    border-radius: 5px;
+    margin: 4px;
+    display: inline-block;
+    padding: 2px;
+  .letter.show
+    color: $color-primary;
+    background-color: transparent;
+  .letter.hide
+    color: #eeeeee;
+  .letter.wrong.show
+    background-color: lighten(red, 35%);
+    color: darken(red, 20%);
+  .letter.wrong.hide
+    background-color: lighten(red, 35%);
+    color: lighten(red, 35%);
 
 .testSlide
-    background-color: #dddddd;
-    border-radius: 4px;
-    padding: 4px;
-    margin: 2px;
-    font-size: 0.9rem;
+  background-color: #dddddd;
+  border-radius: 4px;
+  padding: 4px;
+  margin: 2px;
+  font-size: 0.9rem;
 .synSlide
-    @extend .testSlide
-    .syn
-        background-color: #eeeeee;
-        display: inline-block;
-        margin: 5px;
-        padding: 5px;
-    .syn.bold
-        font-weight: bold;
+  @extend .testSlide
+  .syn
+    background-color: #eeeeee;
+    display: inline-block;
+    margin: 5px;
+    padding: 5px;
+  .syn.bold
+    font-weight: bold;
 .exampleSentences
-    @extend .testSlide
-    background-color: transparent;
-    .showmore, .sentence
-        border-radius: 4px;
-        margin: 4px;
-        display: block;
-    .showmore
-        width: 100%;
-        font-size: 1rem;
-        margin: 8px;
-    .sentence
-        background-color: lighten($color-primary, 60%);
-        .en
-            font-size: 1.1rem;
-            margin: 2px;
-            .selfword
-                font-weight: bold;
-                color: $color-primary;
-        .cn
-            margin: 2px;
-            color: #aaaaaa;
-            font-size: 0.9rem;
-    .sentence.hintMode
-        font-size: 1.2rem;
-        padding: 1rem;
-    .sentence.prefer
-        background-color: lighten($color-primary, 50%);
+  @extend .testSlide
+  background-color: transparent;
+  .showmore, .sentence
+    border-radius: 4px;
+    margin: 4px;
+    display: block;
+  .showmore
+    width: 100%;
+    font-size: 1rem;
+    margin: 8px;
+  .sentence
+    background-color: lighten($color-primary, 60%);
+    .en
+      font-size: 1.1rem;
+      margin: 2px;
+      .selfword
+        font-weight: bold;
+        color: $color-primary;
+    .cn
+      margin: 2px;
+      color: #aaaaaa;
+      font-size: 0.9rem;
+  .sentence.hintMode
+    font-size: 1.2rem;
+    padding: 1rem;
+  .sentence.prefer
+    background-color: lighten($color-primary, 50%);
 
 .WordImageSearchView
-    position: relative;
-    padding: 0;
-    .loading, .webview
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-    .loading
-        padding: 1rem;
-        text-align: center;
-        color: #666666;
-        font-size: 1rem;
-    .strip
-        margin-top: -2px;
-        height: 2px;
-        background-color: $color-primary;
-        @extend .loading-strip-animate
+  position: relative;
+  padding: 0;
+  .loading, .webview
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+  .loading
+    padding: 1rem;
+    text-align: center;
+    color: #666666;
+    font-size: 1rem;
+  .strip
+    margin-top: -2px;
+    height: 2px;
+    background-color: $color-primary;
+    @extend .loading-strip-animate

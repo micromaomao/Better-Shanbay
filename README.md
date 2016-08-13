@@ -59,7 +59,7 @@ You can see 10 synonym of the word.
 
 ## How to contribute?
 
-Just start a [pull request](https://github.com/micromaomao/Better-Shanbay/pulls). There is no coding standard etc. ( yet ).
+Start a [pull request](https://github.com/micromaomao/Better-Shanbay/pulls).
 
 ## What is [Shanbay](https://www.shanbay.com/)?
 

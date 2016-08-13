@@ -3,81 +3,81 @@ $color-primary-dark: #127763;
 $color-primary-text: #222222;
 $color-error: #ea4335;
 body
-    font-size: 16px;
-    background-color: #ffffff;
-    color: $color-primary-text;
-    padding: 0;
-    margin: 0;
-    user-select: none;
-    -webkit-user-select: none;
-    cursor: default;
+  font-size: 16px;
+  background-color: #ffffff;
+  color: $color-primary-text;
+  padding: 0;
+  margin: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
 
 .btn-like
-    box-sizing: border-box;
-    border: none;
-    font-size: 1.1rem;
-    outline: none;
-    background-color: #eeeeee;
-    padding: 0.3rem;
-    color: $color-primary;
+  box-sizing: border-box;
+  border: none;
+  font-size: 1.1rem;
+  outline: none;
+  background-color: #eeeeee;
+  padding: 0.3rem;
+  color: $color-primary;
 button
-    @extend .btn-like
+  @extend .btn-like
 input[type="text"]
-    @extend .btn-like
-    color: $color-primary-text;
+  @extend .btn-like
+  color: $color-primary-text;
 [type="checkbox"]
-    display: none;
+  display: none;
 
 [type="checkbox"] + label:before
-    content: ' ';
-    display: inline-block;
-    border: solid 1px #aaaaaa;
-    width: 0.8rem;
-    height: 0.8rem;
-    vertical-align: middle;
-    background-color: #eeeeee;
-    margin-top: -2px;
-    margin-right: 0.5rem;
-    box-shadow: inset 0 0 0 2px #eeeeee;
+  content: ' ';
+  display: inline-block;
+  border: solid 1px #aaaaaa;
+  width: 0.8rem;
+  height: 0.8rem;
+  vertical-align: middle;
+  background-color: #eeeeee;
+  margin-top: -2px;
+  margin-right: 0.5rem;
+  box-shadow: inset 0 0 0 2px #eeeeee;
 [type="checkbox"]:checked + label:before
-    background-color: $color-primary;
+  background-color: $color-primary;
 [type="checkbox"] + label
-    font-size: 0.9rem;
-    margin: 0;
-    padding: 0;
-    vertical-align: middle;
-    line-height: 1;
-    padding-top: 4px;
-    display: inline-block;
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
+  line-height: 1;
+  padding-top: 4px;
+  display: inline-block;
 
 button:active
-    background-color: #dfdfdf;
+  background-color: #dfdfdf;
 
 button.emp
-    background-color: $color-primary;
-    color: #ffffff;
+  background-color: $color-primary;
+  color: #ffffff;
 button.emp:active
-    background-color: $color-primary-dark;
+  background-color: $color-primary-dark;
 
 @keyframes border-stub
-    0%
-        margin-left: 100%;
-        margin-right: 0;
-    50%
-        margin-left: 0;
-        margin-right: 0;
-    100%
-        margin-left: 0;
-        margin-right: 100%;
+  0%
+    margin-left: 100%;
+    margin-right: 0;
+  50%
+    margin-left: 0;
+    margin-right: 0;
+  100%
+    margin-left: 0;
+    margin-right: 100%;
 .loading-strip-animate
-    animation-name: border-stub;
-    animation-duration: 1.5s;
-    animation-iteration-count: infinite;
+  animation-name: border-stub;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
 .loadingAnimation
-    background-image: url(loading.gif);
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+  background-image: url(loading.gif);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 
 @import login
 @import main
