@@ -8,6 +8,7 @@ const request = require('request')
 const app = electron.app
 
 // Chromium do respect HTTP_PROXY env.
+// TODO: Refresh today's task
 
 const winOpts = {
   center: true,
