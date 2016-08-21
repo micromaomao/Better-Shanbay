@@ -42,11 +42,11 @@ class Cacher {
   }
 }
 
-class ReviewWord {
-  // This class prase the json and send request to look up information from Shanbay. The result is cached in the object.
+class Word {
+  // This class prase the json and send request to look up information. The result is cached.
   constructor (json) {
-    this.reParseJSON(json)
     this._cacher = new Cacher()
+    this.reParseJSON(json)
   }
   reParseJSON (json) {
     // Update word info without destorying cache.
@@ -55,51 +55,57 @@ class ReviewWord {
       this._json.pronunciations = {en: this._json.pron}
     }
     if (!this._json.en_definitions) {
-      let defs = {}
-      let defn = this._json.en_definition
-      defs[defn.pos || '?'] = defn.defn
-      this._json.en_definitions = defs
+      if (this._json.en_definition) {
+        let defs = {}
+        let defn = this._json.en_definition
+        defs[defn.pos || '?'] = [defn.defn]
+        this._endefs = defs
+      } else if (this._json.definitions) {
+        let endefs = {}
+        ;(this._json.definitions.en || []).forEach(defn => {
+          let pos = defn.pos.replace(/\.$/, '')
+          if (endefs[pos]) {
+            endefs[pos].push(defn.defn)
+          } else {
+            endefs[pos] = [defn.defn]
+          }
+        })
+        this._endefs = endefs
+      } else {
+        this._endefs = {}
+      }
+    } else {
+      this._endefs = this._json.en_definitions
     }
+    this._wordid = this._json.id
     return this
-  }
-  get json () {
-    return this._json
-  }
-  get def () {
-    return this._json.en_definitions
-  }
-  get pron () {
-    return this._json.pronunciations
   }
   get word () {
     return this._json.content
   }
   get wordId () {
-    return this._json.content_id
+    return this._wordid
+  }
+  get def () {
+    return this._endefs
+  }
+  get json () {
+    return this._json
   }
   get audioList () {
-    if (!this._json.has_audio) return []
     if (!this._json.audio_addresses) return []
     return Object.keys(this._json.audio_addresses)
   }
-  get reviewStatus () {
-    return [
-      'fresh',
-      'passed',
-      'reviewed',
-      'failed'
-    ][this._json.review_status]
-  }
-  get reviewId () {
-    return this._json.id
+  get pron () {
+    return this._json.pronunciations
   }
   get cnDef () {
-    return this._json.cn_definition.defn
+    return this._json.definitions.cn.map(def => `${def.pos} ${def.defn}`).join('\n')
   }
   getAudio (name) {
     return this._cacher.fetch('audio:' + name, (resolve, reject) => {
-      if (!this._json.has_audio) {
-        reject('No audio')
+      if (!this._json.audio_addresses) {
+        reject('No audios')
         return
       }
       if (!this._json.audio_addresses || !this._json.audio_addresses[name]) {
@@ -133,6 +139,50 @@ class ReviewWord {
       }
       tryAddr(0, null)
     })
+  }
+  thesaurus () {
+    return this._cacher.fetch('thesaurus', (resolve, reject) => {
+      shanbay._thesaurus(this.word).then(syns => {
+        resolve(syns)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  }
+  collins () {
+    return shanbay.collins(this.word)
+  }
+  wordsapi () {
+    return this._cacher.fetch('wordsapi', (resolve, reject) => {
+      shanbay._wordsapi(this.word).then(res => {
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  }
+}
+class ReviewWord extends Word {
+  // This class prase the json and send request to look up information. The result is cached.
+  reParseJSON (json) {
+    // Update review info & fix word info without destorying cache.
+    super.reParseJSON(json)
+    this._wordid = this._json.content_id
+    return this
+  }
+  get reviewStatus () {
+    return [
+      'fresh',
+      'passed',
+      'reviewed',
+      'failed'
+    ][this._json.review_status]
+  }
+  get reviewId () {
+    return this._json.id
+  }
+  get cnDef () {
+    return this._json.cn_definition.defn
   }
   getNotes (_types, shan) {
     return this._cacher.fetch('notes:' + _types, (resolve, reject) => {
@@ -238,33 +288,6 @@ class ReviewWord {
         let s = []
         ss.forEach(x => Array.prototype.push.apply(s, x))
         resolve(s)
-      }).catch(err => {
-        reject(err)
-      })
-    })
-  }
-  thesaurus () {
-    return this._cacher.fetch('thesaurus', (resolve, reject) => {
-      shanbay._thesaurus(this.word).then(syns => {
-        resolve(syns)
-      }).catch(err => {
-        reject(err)
-      })
-    })
-  }
-  collins () {
-    return this._cacher.fetch('collins', (resolve, reject) => {
-      shanbay._collins(this.word).then(defs => {
-        resolve(defs)
-      }).catch(err => {
-        reject(err)
-      })
-    })
-  }
-  wordsapi () {
-    return this._cacher.fetch('wordsapi', (resolve, reject) => {
-      shanbay._wordsapi(this.word).then(res => {
-        resolve(res)
       }).catch(err => {
         reject(err)
       })
@@ -435,6 +458,24 @@ class shanbay {
           return
         }
         resolve(res.data.reviews.map(reviewData => new ReviewWord(reviewData)))
+      }).catch(reject)
+    })
+  }
+  _lookupWordRaw (word) {
+    return this._cacher.fetch('lookup:' + word, (resolve, reject) => {
+      this.api('get', 'bdc/search/', {version: 2, word: word}, null).then((res) => {
+        if (res.status_code !== 0) {
+          reject(res.msg)
+          return
+        }
+        resolve(res.data)
+      }).catch(reject)
+    })
+  }
+  lookupWord (word) {
+    return new Promise((resolve, reject) => {
+      this._lookupWordRaw(word).then(wordObj => {
+        resolve(new Word(wordObj))
       }).catch(reject)
     })
   }
@@ -631,5 +672,11 @@ shanbay._collins = word => new Promise((resolve, reject) => {
     }
   })
 })
+let collinsCacher = new Cacher()
+shanbay.collins = word => {
+  return collinsCacher.fetch(word, (resolve, reject) => {
+    shanbay._collins(word).then(resolve).catch(reject)
+  })
+}
 
 module.exports = shanbay

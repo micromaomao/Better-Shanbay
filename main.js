@@ -479,6 +479,16 @@ app.on('ready', function () {
           win.webContents.send('review', {err: err.toString()})
         })
       })
+      ipc.on('lookup', (evt, arg) => {
+        if (!arg.reqId) return
+        let response = (res) => win.webContents.send(`lookup:${arg.reqId}`, res)
+        Promise.all([shan.lookupWord(arg.word), Shanbay.collins(arg.word)]).then(([word, collins]) => {
+          response({en: Object.keys(word.def).map(k => word.def[k].map(d => `${k}. ${d}`).join('\n')).join('\n'), cn: word.cnDef,
+            collins: collins.join('\n')})
+        }).catch(err => {
+          response({err: err.toString()})
+        })
+      })
       let closing = false
       let noquit = false // If it's true, login window will be showed again instead of quiting the app.
       ipc.once('logout', (evt, arg) => {

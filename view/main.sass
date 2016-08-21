@@ -35,7 +35,7 @@ $status-bar-height: 1.4rem;
         color: $color-error;
         font-size: 1rem;
 
-    .word
+    > .word
       padding: 1rem;
       text-align: center;
       font-size: 2rem;
@@ -203,6 +203,7 @@ $status-bar-height: 1.4rem;
   font-size: 0.9rem;
 .synSlide
   @extend .testSlide
+  @extend .select
   .syn
     background-color: #eeeeee;
     display: inline-block;
@@ -222,14 +223,15 @@ $status-bar-height: 1.4rem;
     font-size: 1rem;
     margin: 8px;
   .sentence
+    @extend .select
     background-color: lighten($color-primary, 60%);
-    .en
+    > .en
       font-size: 1.1rem;
       margin: 2px;
       .selfword
         font-weight: bold;
         color: $color-primary;
-    .cn
+    > .cn
       margin: 2px;
       color: #aaaaaa;
       font-size: 0.9rem;
@@ -258,3 +260,39 @@ $status-bar-height: 1.4rem;
     height: 2px;
     background-color: $color-primary;
     @extend .loading-strip-animate
+
+.wordDictPrompt
+  @extend .select
+  display: inline
+  .part
+    display: inline
+  .singleWord:hover
+    color: $color-primary-dark
+  .singleWord.showdef:hover
+    color: white
+
+.singleWord.showdef
+  @extend .noselect
+  background-color: $color-primary
+  padding: 0.2rem 0.3rem
+  display: inline-block
+  margin: -0.2rem -0.3rem
+  position: relative
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5)
+  color: white
+  .defs
+    color: $color-primary-text
+    position: absolute
+    background-color: white
+    left: 0
+    padding: 0.4rem 0.5rem
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5)
+    font-size: 0.8rem
+    text-align: left
+    width: 350px
+    .err
+      color: $color-error;
+  .defs.right
+    left: auto
+    right: 0
+    text-align: right

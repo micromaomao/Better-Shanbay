@@ -25,6 +25,23 @@ function playAudio (url, onComplete) {
   })
 }
 
+let lookupWord = (function () {
+  let reqId = 1
+  return word => {
+    return new Promise((resolve, reject) => {
+      ipc.once(`lookup:${reqId}`, (evt, arg) => {
+        if (arg.err) {
+          reject(arg.err)
+        } else {
+          resolve(arg)
+        }
+      })
+      ipc.send('lookup', {reqId: reqId, word: word})
+      reqId++
+    })
+  }
+})()
+
 class StatBar extends React.Component {
   render () {
     let {pass, fail, review, pending, total} = this.props
@@ -857,7 +874,7 @@ class MainUI extends React.Component {
             let defIndex = 0
             let addDef = (def, from) => {
               defs.push(<div key={defIndex} className={'def ' + from}>
-                {def}
+                {<WordDictPrompt text={def} />}
               </div>)
               defIndex++
             }
@@ -1003,7 +1020,7 @@ class SynTestSlide extends React.Component {
           let c = index
           index++
           return (<div key={c} className={'syn' + (bold ? ' bold' : '')}>
-            {syn}
+            <WordDictPrompt text={syn} />
           </div>)
         })}
       </div>
@@ -1064,9 +1081,9 @@ class Sentence extends React.Component {
       return (
         <div className={'sentence' + (sent.prefered ? ' prefer' : '')}>
           <div className='en'>
-            {sent.parts[0]}
+            <WordDictPrompt text={sent.parts[0]} />
             <span className='selfword'>{sent.parts[1]}</span>
-            {sent.parts[2]}
+            <WordDictPrompt text={sent.parts[2]} />
           </div>
           <div className='cn'>
             {sent.cn}
@@ -1077,9 +1094,9 @@ class Sentence extends React.Component {
       return (
         <div className='sentence hintMode'>
           <div className='en'>
-            {sent.parts[0]}
+            <WordDictPrompt text={sent.parts[0]} />
             {sent.parts[1]}
-            {sent.parts[2]}
+            <WordDictPrompt text={sent.parts[2]} />
           </div>
         </div>
       )
@@ -1170,6 +1187,120 @@ class WordImageSearchView extends React.Component {
     )
   }
 }
+
+class WordDictPrompt extends React.Component {
+  constructor () {
+    super()
+    this.spliter = /^[A-Za-z\-]$/
+  }
+  render () {
+    let sentence = this.props.text || ''
+    let parts = []
+    let lastPart = null
+    let endPart = (i) => {
+      if (lastPart) {
+        parts.push(Object.assign({}, lastPart, {key: i}))
+      }
+    }
+    for (let i = 0; i < sentence.length; i++ ) {
+      let ch = sentence[i]
+      let nch = sentence[i+1] || ''
+      // One letter don't count as a word.
+      if (this.spliter.test(ch) && ((lastPart && lastPart.isWord) || this.spliter.test(nch))) {
+        if (lastPart && lastPart.isWord) {
+          // Continue on
+          lastPart.text += ch
+        } else {
+          // Word started.
+          endPart(i)
+          lastPart = {isWord: true, text: ch}
+        }
+      } else {
+        if (lastPart && !lastPart.isWord) {
+          lastPart.text += ch
+        } else {
+          endPart(i)
+          lastPart = {isWord: false, text: ch}
+        }
+      }
+    }
+    endPart()
+    this.parts = parts
+    return (
+      <div className="wordDictPrompt">
+        {parts.map(part => {
+          if (!part.isWord) {
+            return (<span className="part" key={part.key}>{part.text}</span>)
+          } else {
+            return (<Word key={part.key} word={part.text} />)
+          }
+        })}
+      </div>
+    )
+  }
+}
+class Word extends React.Component {
+  // TODO: Query word
+  constructor () {
+    super()
+    this.state = {
+      showingDef: false,
+      lookup: null,
+      err: null,
+      right: false
+    }
+    this._looking = false
+    this.handleDown = this.handleDown.bind(this)
+    this.handleUp = this.handleUp.bind(this)
+  }
+  handleDown (evt) {
+    this.setState({showingDef: true})
+    if (window.innerWidth - evt.clientX < 375) {
+      this.setState({right: true})
+    } else {
+      this.setState({right: false})
+    }
+    if (!this._looking) {
+      this._looking = true
+      lookupWord(this.props.word).then(word => {
+        this.setState({lookup: word})
+      }).catch(err => {
+        this.setState({err: err})
+        this._looking = false
+      })
+    }
+  }
+  componentDidUpdate (prevProps) {
+    if (prevProps.word !== this.props.word) {
+      this._looking = false
+      this.setState({lookup: null, err: null})
+    }
+  }
+  handleUp () {
+    this.setState({showingDef: false})
+  }
+  render () {
+    if (this.state.showingDef) {
+      let defs = 'Loading definition...'
+      if (this.state.lookup) {
+        defs = [(<div className="en" key="en">{this.state.lookup.collins}</div>),
+          (<div className="cn" key="cn">{this.state.lookup.cn}</div>)]
+      } else if (this.state.err) {
+        defs = (<div className='err'>{this.state.err}</div>)
+      }
+      return (
+        <span className="part singleWord showdef" onMouseUp={this.handleUp} onMouseLeave={this.handleUp}>
+          {this.props.word}
+          <div className={'defs' + (this.state.right ? ' right' : '')}>{defs}</div>
+        </span>
+      )
+    }
+    return (
+      <span className="part singleWord" onMouseDown={this.handleDown}>{this.props.word}</span>
+    )
+  }
+}
+
 function testGoogle () {
   ipc.send('google')
 }
