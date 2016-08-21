@@ -51,8 +51,8 @@ class ReviewWord {
   reParseJSON (json) {
     // Update word info without destorying cache.
     this._json = json
-    if (!this._json.en_definitions) {
-      this._json.en_definitions = {en: this._json.pron}
+    if (!this._json.pronunciations) {
+      this._json.pronunciations = {en: this._json.pron}
     }
     if (!this._json.en_definitions) {
       let defs = {}
