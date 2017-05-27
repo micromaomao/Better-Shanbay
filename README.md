@@ -1,5 +1,4 @@
 <h1 align="center">Shanbay Desktop</h1>
-<div align="center"><code>// Aka. Better Shanbay but that sound problematic.</code></div>
 
 <img alt="App" src="doc/readme_images/cover.png" align="center" />
 <div align="center">A new <a href="https://www.shanbay.com/">Shanbay</a> client for PC.</div>
@@ -12,7 +11,7 @@ from source code, you can `git clone` and run it via:
     npm install
     npm start
 
-If you encounter any bug, please [report it](https://github.com/micromaomao/Better-Shanbay/issues)!
+If you encounter any bug, please [report it](https://github.com/micromaomao/Shanbay-Desktop/issues)!
 Please describe steps to reproduce, and your environment information ( OS, etc. )
 
 ## Features
@@ -55,11 +54,11 @@ Image search engine as word hint!
 
 You can see 10 synonym of the word.
 
-( OK, that's all. If you want more, why not [tell me](https://github.com/micromaomao/Better-Shanbay/issues)? )
+( OK, that's all. If you want more, why not [tell me](https://github.com/micromaomao/Shanbay-Desktop/issues)? )
 
 ## How to contribute?
 
-Start a [pull request](https://github.com/micromaomao/Better-Shanbay/pulls).
+Start a [pull request](https://github.com/micromaomao/Shanbay-Desktop/pulls).
 
 ## What is [Shanbay](https://www.shanbay.com/)?
 

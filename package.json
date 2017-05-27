@@ -1,6 +1,5 @@
 {
-  "name": "better-shanbay",
-  "productName": "better-shanbay",
+  "name": "shanbay-desktop",
   "version": "0.0.1",
   "description": "Shanbay desktop client",
   "main": "main.js",
@@ -12,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/micromaomao/Better-Shanbay.git"
+    "url": "git+https://github.com/micromaomao/Shanbay-Desktop.git"
   },
   "keywords": [
     "shanbay"
@@ -20,9 +19,9 @@
   "author": "Mao Wtm",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/micromaomao/Better-Shanbay/issues"
+    "url": "https://github.com/micromaomao/Shanbay-Desktop/issues"
   },
-  "homepage": "https://github.com/micromaomao/Better-Shanbay#readme",
+  "homepage": "https://github.com/micromaomao/Shanbay-Desktop#readme",
   "dependencies": {
     "cheerio": "^0.20.0",
     "request": "^2.74.0"
