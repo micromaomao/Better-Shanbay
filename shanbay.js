@@ -569,7 +569,7 @@ shanbay._wordsapi = (() => {
       }
       function fetch () {
         request({
-          url: 'https://www.wordsapi.com/words/' + encodeURIComponent(word),
+          url: 'https://www.wordsapi.com/mashape/words/' + encodeURIComponent(word),
           headers: Object.assign({}, pirateAPIHeaders, {
             'accept': 'application/json',
             'referer': 'https://www.wordsapi.com/'
