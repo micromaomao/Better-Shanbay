@@ -8,11 +8,35 @@ module.exports = {
     filename: 'bundle.js'
   },
   module: {
-    loaders: [
-      { test: /\.sass$/, loaders: ['style', 'css', 'sass'] },
-      { test: /\.jsx$/, loader: 'babel' },
-      { test: /\.md$/, loaders: ['html', 'markdown'] },
-      { test: /\.gif$/, loaders: ['file'] }
+    rules: [
+      {
+        test: /\.sass$/,
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader'
+          },
+          {
+            loader: 'sass-loader'
+          }
+        ]
+      },
+      {
+        test: /\.jsx$/,
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['babel-preset-react'],
+              plugins: ['transform-react-jsx']
+            }
+          }
+        ]
+      },
+      { test: /\.md$/, use: ['html-loader', 'markdown-loader'] },
+      { test: /\.gif$/, use: ['file-loader'] }
     ]
   }
 }
